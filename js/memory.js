@@ -237,6 +237,58 @@ class MemoryManager {
     }
 
     /**
+     * 获取新的、从未练习过的单词
+     */
+    getNewWords(wordList, seen = new Set()) {
+        return wordList.filter(word => {
+            const record = this.getWord(word);
+            return !seen.has(word) && record.totalAttempts === 0;
+        });
+    }
+
+    /**
+     * 获取到期需要复习的单词
+     */
+    getDueReviewWords(wordList, seen = new Set()) {
+        return wordList
+            .filter(word => {
+                const record = this.getWord(word);
+                return !seen.has(word) && record.totalAttempts > 0 && this.needsReview(word);
+            })
+            .sort((a, b) => this.getNextReviewTime(a) - this.getNextReviewTime(b));
+    }
+
+    /**
+     * 获取错题，按错误率从高到低排序
+     */
+    getMistakeWords(wordList, seen = new Set()) {
+        return wordList
+            .filter(word => {
+                const record = this.getWord(word);
+                return !seen.has(word) && record.totalAttempts > 0 && record.errorCount > record.correctCount;
+            })
+            .sort((a, b) => {
+                const recordA = this.getWord(a);
+                const recordB = this.getWord(b);
+                const errorRateA = recordA.errorCount / (recordA.totalAttempts || 1);
+                const errorRateB = recordB.errorCount / (recordB.totalAttempts || 1);
+                return errorRateB - errorRateA;
+            });
+    }
+
+    /**
+     * 获取首页词包统计
+     */
+    getPackStats(wordList) {
+        const stats = this.getStats(wordList);
+        stats.dueReview = wordList.filter(word => {
+            const record = this.getWord(word);
+            return record.totalAttempts > 0 && this.needsReview(word);
+        }).length;
+        return stats;
+    }
+
+    /**
      * 根据模式筛选单词列表
      */
     filterWordsByMode(wordList, mode) {
