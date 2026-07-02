@@ -596,19 +596,19 @@ style.textContent = `
     min-height: 30px;
 }
 .char-correct {
-    color: #6B8E6B;
+    color: var(--feedback-correct);
     font-weight: normal;
 }
 .char-incorrect {
-    color: #B86B6B;
+    color: var(--feedback-incorrect);
     font-weight: normal;
     text-decoration: line-through;
 }
 .char-empty {
-    color: #D4CFC7;
+    color: var(--text-tertiary);
 }
 .hint-mode {
-    border-color: #8B7665 !important;
+    border-color: var(--accent-primary) !important;
 }
 /* 学习卡片样式 */
 .learning-card {
@@ -616,13 +616,13 @@ style.textContent = `
     animation: fadeIn 0.4s ease;
 }
 .learning-card.permanent {
-    background: #F2EFE9;
+    background: var(--bg-paper-warm);
     padding: 25px;
     margin: 20px 0;
 }
 .learning-card-badge {
     display: inline-block;
-    color: #8B7665;
+    color: var(--accent-primary);
     padding: 4px 12px;
     font-size: 12px;
     text-transform: uppercase;
@@ -643,28 +643,28 @@ style.textContent = `
 }
 .word-item-large .label {
     font-size: 12px;
-    color: #6B655F;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 .chinese-large {
     font-size: 26px;
     font-weight: normal;
-    color: #2C2724;
+    color: var(--text-primary);
 }
 .english-large {
     font-size: 28px;
     font-weight: normal;
-    color: #2C2724;
+    color: var(--text-primary);
     font-family: 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
     letter-spacing: 0.05em;
 }
 .arrow-large {
-    color: #9A958F;
+    color: var(--text-tertiary);
     font-size: 24px;
 }
 .learning-card-hint {
-    color: #6B655F;
+    color: var(--text-secondary);
     font-size: 14px;
     margin: 15px 0 20px;
 }
@@ -714,3 +714,43 @@ function nextWord() {
     practiceIndex++;
     loadNextWord();
 }
+
+/**
+ * ==================== 主题切换 ==================== */
+
+/**
+ * 初始化主题
+ */
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+    updateThemeIcon();
+}
+
+/**
+ * 切换主题
+ */
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeIcon();
+}
+
+/**
+ * 更新主题图标
+ */
+function updateThemeIcon() {
+    const icon = document.getElementById('theme-icon');
+    if (icon) {
+        const isDark = document.body.classList.contains('dark-mode');
+        icon.textContent = isDark ? '☀️' : '🌙';
+    }
+}
+
+// 页面加载时初始化主题
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+});
