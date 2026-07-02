@@ -6,21 +6,31 @@
     <title>英语单词打字练习</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body onload="loadDefaultWordPack()">
     <div class="container">
         <header>
             <h1>📚 英语单词打字练习</h1>
             <p class="subtitle">小学英语单词学习 - 艾宾浩斯记忆曲线</p>
         </header>
 
-        <!-- 单词源选择 -->
+        <!-- 词包选择 -->
         <div id="word-source-section" class="section">
-            <h2>选择单词源</h2>
-            <div class="word-source-buttons">
-                <button class="btn btn-primary" onclick="loadWordSource('9.xml')">小学英语单词1 (9.xml)</button>
-                <button class="btn btn-primary" onclick="loadWordSource('10.xml')">小学英语单词2 (10.xml)</button>
-                <button class="btn btn-primary" onclick="loadWordSource('11.xml')">小学英语单词3 (11.xml)</button>
-                <button class="btn btn-success" onclick="loadWordSource('all')">全部单词 (448个)</button>
+            <h2>小学英语全部</h2>
+            <div class="pack-card">
+                <p class="pack-subtitle"><span id="pack-total-count">448</span> 个单词</p>
+                <div class="pack-stats">
+                    <span>待复习 <strong id="pack-review-count">0</strong></span>
+                    <span>新词 <strong id="pack-new-count">0</strong></span>
+                    <span>错题 <strong id="pack-mistake-count">0</strong></span>
+                </div>
+                <div class="session-buttons">
+                    <button class="btn btn-primary session-btn" onclick="startSession('quick')">
+                        小试牛刀 · 20 词
+                    </button>
+                    <button class="btn btn-success session-btn" onclick="startSession('challenge')">
+                        挑战模式 · 每批 20 词
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -34,21 +44,6 @@
 
         <!-- 练习区域 -->
         <div id="practice-section" class="section hidden">
-            <!-- 模式切换 -->
-            <div class="mode-switch">
-                <button class="mode-btn active" data-mode="learn" onclick="switchMode('learn')">
-                    📖 学习模式
-                </button>
-                <button class="mode-btn" data-mode="review" onclick="switchMode('review')">
-                    🔄 复习模式
-                    <span id="review-count" class="badge">0</span>
-                </button>
-                <button class="mode-btn" data-mode="mistake" onclick="switchMode('mistake')">
-                    ❌ 错题本
-                    <span id="mistake-count" class="badge">0</span>
-                </button>
-            </div>
-
             <!-- 统计信息 -->
             <div class="stats">
                 <div class="stat-item">
@@ -92,7 +87,8 @@
             <div class="control-buttons">
                 <button class="btn btn-secondary" onclick="skipWord()">跳过</button>
                 <button class="btn btn-secondary" onclick="showAnswer()">显示答案</button>
-                <button class="btn btn-warning" onclick="backToSource()">返回选词</button>
+                <button id="end-challenge-button" class="btn btn-warning hidden" onclick="endChallenge()">结束练习</button>
+                <button class="btn btn-warning" onclick="backToSource()">返回首页</button>
                 <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关">
                     <span id="pronunciation-icon">🔈</span>
                 </button>
@@ -133,7 +129,10 @@
                         <span class="stat-name">正确率</span>
                     </div>
                 </div>
-                <button class="btn btn-primary" onclick="backToSource()">继续练习</button>
+                <div class="complete-actions">
+                    <button class="btn btn-primary" onclick="repeatLastSession()">再来一轮</button>
+                    <button class="btn btn-secondary" onclick="backToSource()">返回首页</button>
+                </div>
             </div>
         </div>
 
@@ -147,6 +146,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
     <script src="js/memory.js"></script>
+    <script src="js/feed-builder.js"></script>
     <script src="js/data-loader.js"></script>
     <script src="js/sound-effects.js"></script>
     <script src="js/pronunciation.js"></script>
