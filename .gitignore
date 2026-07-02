@@ -21,3 +21,6 @@ npm-debug.log*
 # Build
 dist/
 build/
+
+# Other repos
+qwerty-learner/
