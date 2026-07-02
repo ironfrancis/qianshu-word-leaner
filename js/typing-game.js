@@ -8,15 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // 游戏状态
-let currentMode = 'learn';
+let sessionType = 'quick';
+let lastSessionType = 'quick';
 let currentWord = null;
 let practiceQueue = [];
 let practiceIndex = 0;
+let sessionSeen = new Set();
+let batchIndex = 1;
 let sessionStats = {
     total: 0,
     correct: 0,
     incorrect: 0,
-    streak: 0
+    streak: 0,
+    newWords: 0,
+    reviewWords: 0,
+    mistakeWords: 0
 };
 
 // 智能提示相关
@@ -57,64 +63,62 @@ function clearAllTimers() {
 }
 
 /**
- * 初始化练习
+ * 创建空的 session 统计
  */
-function initPractice() {
-    currentMode = 'learn';
-    practiceQueue = [];
-    practiceIndex = 0;
-    sessionStats = { total: 0, correct: 0, incorrect: 0, streak: 0 };
-
-    showSection('practice-section');
-    switchMode('learn');
+function createEmptySessionStats() {
+    return {
+        total: 0,
+        correct: 0,
+        incorrect: 0,
+        streak: 0,
+        newWords: 0,
+        reviewWords: 0,
+        mistakeWords: 0
+    };
 }
 
 /**
- * 切换模式
+ * 开始练习 session
  */
-function switchMode(mode) {
-    currentMode = mode;
+function startSession(type) {
+    sessionType = type;
+    lastSessionType = type;
+    practiceQueue = [];
+    practiceIndex = 0;
+    sessionSeen = new Set();
+    batchIndex = 1;
+    sessionStats = createEmptySessionStats();
 
-    // 更新模式按钮状态
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.mode === mode) {
-            btn.classList.add('active');
-        }
-    });
+    showSection('practice-section');
+    document.getElementById('end-challenge-button').classList.toggle('hidden', type !== 'challenge');
+    loadSessionBatch();
+}
 
-    // 获取该模式下的单词队列
-    const wordList = getAvailableWords(mode);
-    practiceQueue = wordList;
+/**
+ * 加载一批练习单词
+ */
+function loadSessionBatch() {
+    const wordList = getCurrentWordList().map(item => item.word);
+    practiceQueue = buildSessionQueue(wordList, { limit: SESSION_SIZE, seen: sessionSeen });
     practiceIndex = 0;
 
-    // 更新徽章数量
-    updateBadges();
+    practiceQueue.forEach(word => {
+        sessionSeen.add(word);
+    });
 
     if (practiceQueue.length === 0) {
-        if (mode === 'review') {
-            showEmptyState('当前没有需要复习的单词 🎉');
-        } else if (mode === 'mistake') {
-            showEmptyState('太棒了！没有错题需要练习 🎉');
-        } else {
-            showEmptyState('没有可学习的单词');
-        }
+        showComplete();
         return;
     }
 
-    // 开始练习
     loadNextWord();
 }
 
 /**
- * 更新徽章数量
+ * 再来一轮
  */
-function updateBadges() {
-    const reviewList = getAvailableWords('review');
-    const mistakeList = getAvailableWords('mistake');
-
-    document.getElementById('review-count').textContent = reviewList.length;
-    document.getElementById('mistake-count').textContent = mistakeList.length;
+function repeatLastSession() {
+    startSession(lastSessionType);
 }
 
 /**
@@ -125,6 +129,7 @@ function showEmptyState(message) {
     document.getElementById('chinese-word').textContent = message;
     document.getElementById('word-input').value = '';
     document.getElementById('word-input').disabled = true;
+    document.getElementById('answer-display').classList.add('hidden');
     updateStats();
 }
 
@@ -133,7 +138,12 @@ function showEmptyState(message) {
  */
 function loadNextWord() {
     if (practiceIndex >= practiceQueue.length) {
-        showComplete();
+        if (sessionType === 'challenge') {
+            batchIndex++;
+            loadSessionBatch();
+        } else {
+            showComplete();
+        }
         return;
     }
 
@@ -150,6 +160,14 @@ function loadNextWord() {
     currentWord = practiceQueue[practiceIndex];
     const wordObj = getWordObject(currentWord);
     const wordRecord = memoryManager.getWord(currentWord);
+
+    if (wordRecord.totalAttempts === 0) {
+        sessionStats.newWords++;
+    } else if (wordRecord.errorCount > wordRecord.correctCount) {
+        sessionStats.mistakeWords++;
+    } else {
+        sessionStats.reviewWords++;
+    }
 
     // 显示中文
     document.getElementById('chinese-word').textContent = wordObj.meaning;
@@ -349,18 +367,22 @@ function updateInputFeedback() {
  * 更新统计信息
  */
 function updateStats() {
-    const total = practiceQueue.length;
-    const remaining = total - practiceIndex;
+    const total = practiceQueue.length || SESSION_SIZE;
     const accuracy = sessionStats.total > 0
         ? Math.round((sessionStats.correct / sessionStats.total) * 100)
         : '-';
 
-    document.getElementById('progress-text').textContent = `${practiceIndex}/${total}`;
+    if (sessionType === 'challenge') {
+        document.getElementById('progress-text').textContent =
+            `第 ${batchIndex} 批 · ${practiceIndex}/${total} · 累计 ${sessionStats.total} 词`;
+    } else {
+        document.getElementById('progress-text').textContent = `${practiceIndex}/${total}`;
+    }
+
     document.getElementById('accuracy-text').textContent = `${accuracy}%`;
     document.getElementById('streak-text').textContent = sessionStats.streak;
 
-    // 更新进度条
-    const progressPercent = (practiceIndex / total) * 100;
+    const progressPercent = total > 0 ? (practiceIndex / total) * 100 : 0;
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
 }
 
@@ -489,7 +511,8 @@ function recordAnswer(correct, usedHint = false) {
         memoryManager.recordResult(currentWord, false);
     }
 
-    updateBadges();
+    updateStats();
+    updatePackOverview();
 }
 
 /**
@@ -551,6 +574,14 @@ function handleKeydown(event) {
 }
 
 /**
+ * 结束挑战模式
+ */
+function endChallenge() {
+    clearAllTimers();
+    showComplete();
+}
+
+/**
  * 显示完成界面
  */
 function showComplete() {
@@ -561,20 +592,25 @@ function showComplete() {
         ? Math.round((sessionStats.correct / sessionStats.total) * 100)
         : 0;
 
+    document.querySelector('#complete-section h2').textContent =
+        sessionType === 'challenge' ? '挑战结束！' : '本轮完成！';
     document.getElementById('complete-total').textContent = sessionStats.total;
     document.getElementById('complete-correct').textContent = sessionStats.correct;
     document.getElementById('complete-accuracy').textContent = `${accuracy}%`;
 
-    // 根据正确率显示不同消息
     let message = '完成！';
-    if (accuracy >= 90) {
+    if (sessionStats.total === 0) {
+        message = '本次还没有练习单词';
+    } else if (accuracy >= 90) {
         message = '太棒了！你的正确率很高！🎉';
     } else if (accuracy >= 70) {
         message = '不错！继续加油！💪';
     } else {
         message = '需要多加练习哦 📚';
     }
+
     document.getElementById('complete-text').textContent = message;
+    updatePackOverview();
 }
 
 /**
@@ -582,6 +618,9 @@ function showComplete() {
  */
 function backToSource() {
     clearAllTimers();
+    currentWord = null;
+    document.getElementById('end-challenge-button').classList.add('hidden');
+    updatePackOverview();
     showSection('word-source-section');
 }
 
