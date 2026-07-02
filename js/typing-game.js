@@ -496,13 +496,23 @@ function recordAnswer(correct, usedHint = false) {
  * 跳过当前单词（算作不会）
  */
 function skipWord() {
-    // 跳过算作不会，记录为错误
-    recordAnswer(false);
-
-    // 显示答案让用户学习一下
+    // showAnswer 会记录为错误
     showAnswer();
+}
 
-    // 用户查看后点击"下一个"才会继续
+/**
+ * 渲染标准答案面板（showLearningMode / showLearningCard 会替换 innerHTML，需重建）
+ */
+function renderAnswerPanel() {
+    const answerDisplay = document.getElementById('answer-display');
+    answerDisplay.innerHTML = `
+        <div class="correct-answer">
+            <span class="answer-label">正确答案:</span>
+            <span id="correct-word" class="word-text">${currentWord}</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextWord()">下一个 →</button>
+    `;
+    answerDisplay.classList.remove('hidden');
 }
 
 /**
@@ -512,10 +522,7 @@ function showAnswer() {
     if (!currentWord) return;
 
     clearAllTimers();
-
-    const answerDisplay = document.getElementById('answer-display');
-    document.getElementById('correct-word').textContent = currentWord;
-    answerDisplay.classList.remove('hidden');
+    renderAnswerPanel();
 
     // 记录为错误
     const input = document.getElementById('word-input');
