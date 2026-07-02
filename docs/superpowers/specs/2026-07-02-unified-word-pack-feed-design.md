@@ -57,9 +57,9 @@
 
 ### 小试牛刀
 
-- 进入时预生成 **恰好 20 词** 的队列。
+- 进入时预生成 **目标 20 词** 的队列；词池充足时恰好 20 词，词池不足时返回实际可练数量。
 - 进度显示 `当前/20`。
-- 第 20 词完成后进入 **Session 小结页**（正确率、新词/复习/错题计数）。
+- 本批队列完成后进入 **Session 小结页**（正确率、新词/复习/错题计数）。
 - 小结页提供「再来一轮」和「返回首页」。
 
 ### 挑战模式
@@ -105,7 +105,7 @@ const MISTAKE_REVIEW_CAP = 3; // 未到期错题最多占复习位数量
 ### 新词位（目标 8 个）
 
 1. 从 **新词池** 按 XML 原始顺序取词（保持教材顺序感）。
-2. 新词不足 8 → 用 **到期复习池** 剩余词补位（仍按过期时间排序）。
+2. 新词不足 8 → 用 **复习候选池中尚未选入队列的词** 补位，顺序仍按「到期错题 → 到期普通复习 → 未到期错题」。
 3. 新词位补位后复习位仍不足 12 → 接受实际比例（见边界情况）。
 
 ### 合并与打散
@@ -185,6 +185,7 @@ function buildSessionQueue(wordList, { limit = 20, seen = new Set() } = {}) {}
 - 移除 `.mode-switch`（三个 Tab）。
 - 练习区新增挑战模式「结束练习」按钮（默认 hidden，挑战模式显示）。
 - 新增 Session 小结区块 `#session-complete-section`（或复用 `#complete-section` 并扩展字段）。
+- 新增 `<script src="js/feed-builder.js"></script>`，加载顺序放在 `memory.js` 之后、`typing-game.js` 之前。
 
 ### 修改：`css/style.css`
 
@@ -215,7 +216,7 @@ loadDefaultWordPack()
 
 每词答题
   → memoryManager.recordResult / recordResultWithHint（不变）
-  → sessionSeen.add(word)（可选，在 loadNextWord 时维护）
+  → sessionSeen.add(word)（必须，在单词进入当前 session 队列时维护，确保挑战模式续批不重复）
 ```
 
 **持久化**：仅单词级 progress（现有 `english_typing_progress`）。Session 统计（本批正确率等）仅内存，小结页展示后丢弃。
@@ -230,7 +231,7 @@ loadDefaultWordPack()
 | 到期复习 < 12 | 复习位按实际数量填充，新词位扩展至凑满 20 |
 | 新词 < 8 | 新词全取，复习位扩展至凑满 20 |
 | 到期复习 + 新词合计 < 20 | 返回实际数量；小结显示「本批 N 词」 |
-| 448 词全部掌握（stage 满且无到期） | 首页提示「暂无待练单词」；仍可进挑战做随机巩固（可选：从 mastered 池随机抽 20，V2 不做） |
+| 448 词全部掌握（stage 满且无到期） | 首页提示「暂无待练单词」；V1 不从已掌握池随机抽词 |
 | 挑战模式词池耗尽 | 弹窗/小结：「太棒了，暂无更多待练单词！」 |
 | 挑战模式第 1 词前点结束 | 小结显示「已练 0 词」，返回首页 |
 | session 内去重 | 续批时 `seen` 包含所有已练词，不重复 |
