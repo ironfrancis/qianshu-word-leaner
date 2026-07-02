@@ -126,46 +126,66 @@ function getMeaning(word) {
 }
 
 /**
+ * 加载全部单词
+ */
+async function loadAllWords() {
+    const words9 = await parseWordXML('9.xml');
+    const words10 = await parseWordXML('10.xml');
+    const words11 = await parseWordXML('11.xml');
+    return [...new Set([...words9, ...words10, ...words11])];
+}
+
+/**
  * 加载单词源
  */
 async function loadWordSource(source) {
     showSection('loading-section');
 
     try {
-        // 先加载翻译字典
         await loadTranslationDict();
 
-        let wordList = [];
+        const wordList = source === 'all'
+            ? await loadAllWords()
+            : [...new Set(await parseWordXML(source))];
 
-        if (source === 'all') {
-            // 加载所有文件
-            const words9 = await parseWordXML('9.xml');
-            const words10 = await parseWordXML('10.xml');
-            const words11 = await parseWordXML('11.xml');
-            wordList = [...words9, ...words10, ...words11];
-        } else {
-            wordList = await parseWordXML(source);
-        }
-
-        // 去重
-        wordList = [...new Set(wordList)];
-
-        // 创建带翻译的单词对象列表
         currentWordList = wordList.map(word => ({
             word: word,
             meaning: getMeaning(word)
         }));
 
         console.log(`加载完成: ${currentWordList.length} 个单词`);
-
-        // 初始化练习
-        initPractice();
-
+        updatePackOverview();
+        showSection('word-source-section');
     } catch (error) {
         console.error('加载失败:', error);
         alert(`加载失败: ${error.message}\n请确保data文件夹中有相应的XML文件。`);
         showSection('word-source-section');
     }
+}
+
+/**
+ * 加载默认词包（小学英语全部）
+ */
+async function loadDefaultWordPack() {
+    await loadWordSource('all');
+}
+
+/**
+ * 更新首页词包统计
+ */
+function updatePackOverview() {
+    const wordList = currentWordList.map(item => item.word);
+    const stats = memoryManager.getPackStats(wordList);
+
+    const totalEl = document.getElementById('pack-total-count');
+    const reviewEl = document.getElementById('pack-review-count');
+    const newEl = document.getElementById('pack-new-count');
+    const mistakeEl = document.getElementById('pack-mistake-count');
+
+    if (totalEl) totalEl.textContent = stats.total;
+    if (reviewEl) reviewEl.textContent = stats.dueReview;
+    if (newEl) newEl.textContent = stats.new;
+    if (mistakeEl) mistakeEl.textContent = stats.mistake;
 }
 
 /**
