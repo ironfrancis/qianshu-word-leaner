@@ -1,0 +1,9 @@
+{
+  "appId": "com.english.typing.practice",
+  "appName": "English Typing Practice",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

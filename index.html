@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语单词打字练习</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 英语单词打字练习</h1>
+            <p class="subtitle">小学英语单词学习 - 艾宾浩斯记忆曲线</p>
+        </header>
+
+        <!-- 单词源选择 -->
+        <div id="word-source-section" class="section">
+            <h2>选择单词源</h2>
+            <div class="word-source-buttons">
+                <button class="btn btn-primary" onclick="loadWordSource('9.xml')">小学英语单词1 (9.xml)</button>
+                <button class="btn btn-primary" onclick="loadWordSource('10.xml')">小学英语单词2 (10.xml)</button>
+                <button class="btn btn-primary" onclick="loadWordSource('11.xml')">小学英语单词3 (11.xml)</button>
+                <button class="btn btn-success" onclick="loadWordSource('all')">全部单词 (448个)</button>
+            </div>
+        </div>
+
+        <!-- 加载中提示 -->
+        <div id="loading-section" class="section hidden">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>正在加载单词数据...</p>
+            </div>
+        </div>
+
+        <!-- 练习区域 -->
+        <div id="practice-section" class="section hidden">
+            <!-- 模式切换 -->
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="learn" onclick="switchMode('learn')">
+                    📖 学习模式
+                </button>
+                <button class="mode-btn" data-mode="review" onclick="switchMode('review')">
+                    🔄 复习模式
+                    <span id="review-count" class="badge">0</span>
+                </button>
+                <button class="mode-btn" data-mode="mistake" onclick="switchMode('mistake')">
+                    ❌ 错题本
+                    <span id="mistake-count" class="badge">0</span>
+                </button>
+            </div>
+
+            <!-- 统计信息 -->
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">进度:</span>
+                    <span id="progress-text">0/0</span>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">正确率:</span>
+                    <span id="accuracy-text">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">连续正确:</span>
+                    <span id="streak-text">0</span>
+                </div>
+            </div>
+
+            <!-- 单词显示区 -->
+            <div class="word-display">
+                <div class="chinese-word" id="chinese-word">加载中...</div>
+                <div class="hint-text">请输入对应的英文单词</div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area">
+                <input
+                    type="text"
+                    id="word-input"
+                    placeholder="在此输入英文单词..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    oninput="checkInput()"
+                    onkeydown="handleKeydown(event)"
+                >
+                <div id="input-feedback" class="input-feedback"></div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="control-buttons">
+                <button class="btn btn-secondary" onclick="skipWord()">跳过</button>
+                <button class="btn btn-secondary" onclick="showAnswer()">显示答案</button>
+                <button class="btn btn-warning" onclick="backToSource()">返回选词</button>
+                <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关">
+                    <span id="pronunciation-icon">🔈</span>
+                </button>
+                <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关">
+                    <span id="sound-icon">🔊</span>
+                </button>
+            </div>
+
+            <!-- 答案显示 -->
+            <div id="answer-display" class="answer-display hidden">
+                <div class="correct-answer">
+                    <span class="answer-label">正确答案:</span>
+                    <span id="correct-word" class="word-text"></span>
+                </div>
+                <button class="btn btn-primary" onclick="nextWord()">下一个 →</button>
+            </div>
+        </div>
+
+        <!-- 完成界面 -->
+        <div id="complete-section" class="section hidden">
+            <div class="complete-message">
+                <h2>🎉 太棒了！</h2>
+                <p id="complete-text">本轮练习完成！</p>
+                <div class="complete-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="complete-total">0</span>
+                        <span class="stat-name">总单词</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="complete-correct">0</span>
+                        <span class="stat-name">正确</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="complete-accuracy">0%</span>
+                        <span class="stat-name">正确率</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="backToSource()">继续练习</button>
+            </div>
+        </div>
+
+        <!-- 单词列表 -->
+        <div id="word-list-section" class="section hidden">
+            <h2>单词列表</h2>
+            <div id="word-list-content"></div>
+            <button class="btn btn-secondary" onclick="backToPractice()">返回练习</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+    <script src="js/memory.js"></script>
+    <script src="js/data-loader.js"></script>
+    <script src="js/sound-effects.js"></script>
+    <script src="js/pronunciation.js"></script>
+    <script src="js/typing-game.js"></script>
+</body>
+</html>
