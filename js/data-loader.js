@@ -12,7 +12,7 @@ let currentWordList = []; // 当前选中的单词列表
  */
 async function parseWordXML(filename) {
     try {
-        const response = await fetch(`../data/${filename}`);
+        const response = await fetch(`data/${filename}`);
         if (!response.ok) {
             throw new Error(`加载文件失败: ${filename}`);
         }
@@ -50,7 +50,7 @@ async function parseWordXML(filename) {
  */
 async function parseTranslationDict() {
     try {
-        const response = await fetch('../data/trans_dict.xml');
+        const response = await fetch('data/trans_dict.xml');
         if (!response.ok) {
             throw new Error('加载翻译字典失败');
         }
