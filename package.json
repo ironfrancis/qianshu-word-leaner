@@ -1,17 +1,25 @@
 {
-  "name": "english-typing-practice",
+  "name": "qianshu-word-learner",
   "version": "1.0.0",
-  "description": "基于艾宾浩斯遗忘曲线的英语单词学习打字练习工具。",
-  "main": "index.js",
+  "description": "🌳 千树背单词 — 基于艾宾浩斯遗忘曲线的英语单词打字练习工具。父与子的编程之旅。",
+  "private": true,
+  "main": "index.html",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
-    "cap:run:android": "npx cap run android"
+    "cap:run:android": "npx cap run android",
+    "start": "npx serve ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "english-learning",
+    "typing-practice",
+    "ebbinghaus-curve",
+    "vocabulary",
+    "spaced-repetition",
+    "parent-child-programming"
+  ],
+  "author": "ironfrancis",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@capacitor/android": "^8.4.1",
