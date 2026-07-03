@@ -2,9 +2,12 @@
  * 打字游戏主逻辑
  */
 
-// 初始化音效（在用户首次交互时）
+// 初始化
 document.addEventListener('DOMContentLoaded', () => {
     updateSoundIcon();
+    initTheme();
+    // 首次创建图标
+    lucide.createIcons();
 });
 
 // 游戏状态
@@ -29,8 +32,11 @@ let sessionStats = {
 let idleTimer = null;           // 检测用户是否停止输入
 let hintTimer = null;           // 显示提示的定时器
 let learningCardTimer = null;    // 30秒学习卡片定时器
+let cardAutoHideTimer = null;    // 学习卡自动隐藏的定时器
+let isAnswerLocked = false;      // 学习卡是否处于锁定显示（30秒卡 / Enter 强制显示）
+let alwaysShowAnswer = false;    // 「显示答案」开关：开启后每个单词都常驻显示学习卡
 let hintIndex = 0;               // 当前提示到第几个字母
-let usedHints = false;           // 是否使用了提示
+let usedHints = false;           // 是否使用了提示（含查看过学习卡）
 let lastInputLength = 0;         // 上次输入长度
 let lastInputTime = 0;           // 上次输入时间
 let isShowingHint = false;       // 是否正在显示提示
@@ -57,9 +63,18 @@ function clearAllTimers() {
     if (idleTimer) clearTimeout(idleTimer);
     if (hintTimer) clearTimeout(hintTimer);
     if (learningCardTimer) clearTimeout(learningCardTimer);
+    clearCardDisplayTimers();
     idleTimer = null;
     hintTimer = null;
     learningCardTimer = null;
+}
+
+/**
+ * 清除学习卡区域的自动隐藏 / 自动前进定时器
+ */
+function clearCardDisplayTimers() {
+    if (cardAutoHideTimer) clearTimeout(cardAutoHideTimer);
+    cardAutoHideTimer = null;
 }
 
 /**
@@ -88,6 +103,8 @@ function startSession(type) {
     sessionSeen = new Set();
     batchIndex = 1;
     sessionStats = createEmptySessionStats();
+    alwaysShowAnswer = false;
+    updatePeekToggleUI();
 
     showSection('practice-section');
     document.getElementById('end-challenge-button').classList.toggle('hidden', type !== 'challenge');
@@ -153,6 +170,7 @@ function loadNextWord() {
     // 重置提示状态
     hintIndex = 0;
     usedHints = false;
+    isAnswerLocked = false;
     lastInputLength = 0;
     lastInputTime = Date.now();
     isShowingHint = false;
@@ -175,22 +193,27 @@ function loadNextWord() {
     document.getElementById('word-input').disabled = false;
     document.getElementById('word-input').classList.remove('correct', 'incorrect');
     document.getElementById('word-input').focus();
-    document.getElementById('input-feedback').innerHTML = '';
-    document.getElementById('answer-display').classList.add('hidden');
-
-    // 检查是否是新单词（第一次学习）
-    if (wordRecord && wordRecord.totalAttempts === 0) {
-        // 新单词：先显示答案让用户学习
-        setTimeout(() => {
-            showLearningMode(currentWord);
-        }, 300);
-    }
+    const feedback = document.getElementById('input-feedback');
+    feedback.classList.remove('feedback-correct', 'feedback-incorrect');
+    updateInputFeedback();
+    clearAnswerCard();
 
     // 播放单词发音
     pronunciationManager.play(currentWord);
 
-    // 启动提示定时器
-    startHintSystem();
+    if (alwaysShowAnswer) {
+        // 常显模式：直接展示该词学习卡，不需要新词预览或智能提示
+        showPersistentAnswerCard();
+    } else if (wordRecord && wordRecord.totalAttempts === 0) {
+        // 新单词：先显示答案让用户学习
+        setTimeout(() => {
+            showLearningMode(currentWord);
+        }, 300);
+        startHintSystem();
+    } else {
+        // 启动提示定时器
+        startHintSystem();
+    }
 
     updateStats();
 }
@@ -199,6 +222,8 @@ function loadNextWord() {
  * 启动智能提示系统
  */
 function startHintSystem() {
+    if (alwaysShowAnswer) return; // 常显模式下无需智能提示
+
     const target = currentWord ? currentWord.toLowerCase() : '';
 
     // 8秒无输入后开始提示
@@ -263,17 +288,16 @@ function showNextHint() {
 }
 
 /**
- * 显示学习卡片（30秒卡住时）
+ * 生成学习卡 HTML（无 continueHandler 时为纯预览卡，不含按钮）
  */
-function showLearningCard(word) {
-    clearAllTimers();
-
+function buildLearningCardHTML(word, { badgeText, hintText, continueHandler, continueLabel }) {
     const wordObj = getWordObject(word);
-    const answerDisplay = document.getElementById('answer-display');
-
-    answerDisplay.innerHTML = `
+    const buttonHTML = continueHandler
+        ? `<button class="btn btn-primary" onclick="${continueHandler}">${continueLabel}</button>`
+        : '';
+    return `
         <div class="learning-card permanent">
-            <div class="learning-card-badge">💡 学习提示</div>
+            <div class="learning-card-badge">${badgeText}</div>
             <div class="word-pair-large">
                 <div class="word-item-large">
                     <span class="label">中文</span>
@@ -285,57 +309,206 @@ function showLearningCard(word) {
                     <span class="english-large">${word}</span>
                 </div>
             </div>
-            <p class="learning-card-hint">这个单词需要多加练习哦</p>
-            <button class="btn btn-primary" onclick="continueFromLearningCard()">我学会了，继续练习</button>
+            <p class="learning-card-hint">${hintText}</p>
+            ${buttonHTML}
         </div>
     `;
-    answerDisplay.classList.remove('hidden');
-
-    // 记录为使用了提示
-    usedHints = true;
 }
 
 /**
- * 从学习卡片继续
+ * 判断鼠标当前是否仍停在「显示答案」按钮或学习卡区域内
+ */
+function isPeekAreaHovered() {
+    const btn = document.getElementById('peek-answer-btn');
+    const card = document.getElementById('answer-display');
+    return (btn && btn.matches(':hover')) || (card && card.matches(':hover'));
+}
+
+/**
+ * 彻底隐藏并清空答案区域（学习卡的默认隐藏方式）
+ */
+function clearAnswerCard() {
+    const card = document.getElementById('answer-display');
+    card.classList.add('hidden');
+    card.classList.remove('learning-card-area');
+    card.onmouseenter = null;
+    card.onmouseleave = null;
+    card.innerHTML = '';
+}
+
+/**
+ * 安排隐藏学习卡：用极短缓冲（150ms）处理按钮与卡片之间的间隙，
+ * 避免鼠标从按钮移向卡片途中经过空隙而被误判为「移出」。
+ * 到点时若鼠标仍在「按钮 + 卡片」区域内的任意位置，则不隐藏。
+ */
+function scheduleCardHide(hideFn) {
+    clearCardDisplayTimers();
+    cardAutoHideTimer = setTimeout(() => {
+        if (isAnswerLocked || alwaysShowAnswer || isPeekAreaHovered()) return;
+        hideFn();
+    }, 150);
+}
+
+/**
+ * 挂载学习卡到答案区域
+ * - 只要学习卡显示，就把当前单词标记为「看过答案」（usedHints=true），本次即使拼对也不算掌握
+ * - options.locked 为 true 时锁定显示（点击显示答案 / 30 秒卡），鼠标移开不隐藏，需点按钮继续
+ * - 否则为预览卡：鼠标悬停在「按钮 + 卡片」区域内任意位置都保持显示，
+ *   完全移出后触发 options.onAutoHide（默认直接隐藏）；
+ *   若指定 options.autoHideDelay，还会在挂载后该时长自动尝试隐藏一次（新词预览用）
+ */
+function mountLearningCard(word, options = {}) {
+    const answerDisplay = document.getElementById('answer-display');
+    clearCardDisplayTimers();
+
+    // 看过学习卡即视为未完全掌握
+    usedHints = true;
+
+    answerDisplay.innerHTML = buildLearningCardHTML(word, options);
+    answerDisplay.classList.remove('hidden');
+    answerDisplay.classList.add('learning-card-area');
+    lucide.createIcons();
+
+    if (options.locked) {
+        isAnswerLocked = true;
+        answerDisplay.onmouseenter = null;
+        answerDisplay.onmouseleave = null;
+        return;
+    }
+
+    const hideFn = options.onAutoHide || clearAnswerCard;
+    answerDisplay.onmouseenter = () => clearCardDisplayTimers();
+    answerDisplay.onmouseleave = () => scheduleCardHide(hideFn);
+
+    if (options.autoHideDelay) {
+        cardAutoHideTimer = setTimeout(() => {
+            if (alwaysShowAnswer || isPeekAreaHovered()) return;
+            hideFn();
+        }, options.autoHideDelay);
+    }
+}
+
+/**
+ * 悬停「显示答案」按钮时预览学习卡（想不起来时查看）
+ * 注意：不要用 isWordCorrect() 拦截——提示系统会用 JS 直接给输入框赋值
+ * （不触发 oninput），此时输入框内容可能已等于目标单词，但用户并未真正
+ * 确认输入，此时仍应允许悬停查看答案。
+ */
+function peekAnswer() {
+    // 常显模式下卡片本就一直显示，悬停无需额外动作
+    if (!currentWord || isAnswerLocked || alwaysShowAnswer) return;
+
+    mountLearningCard(currentWord, {
+        badgeText: '<i data-lucide="lightbulb" class="icon-inline"></i> 学习提示',
+        hintText: '想不起来就看一眼，记住后移开鼠标继续拼写'
+    });
+}
+
+/**
+ * 鼠标移开「显示答案」按钮时尝试隐藏预览学习卡
+ */
+function hidePeekAnswer() {
+    // 常显模式下不应被隐藏
+    if (isAnswerLocked || alwaysShowAnswer) return;
+    scheduleCardHide(clearAnswerCard);
+}
+
+/**
+ * 常显模式：为当前单词展示常驻学习卡（不锁定、无需继续按钮，鼠标移开也不隐藏）
+ */
+function showPersistentAnswerCard() {
+    if (!currentWord) return;
+
+    mountLearningCard(currentWord, {
+        badgeText: '<i data-lucide="eye" class="icon-inline"></i> 常显模式',
+        hintText: '已开启「显示答案」常显模式，再次点击按钮可关闭'
+    });
+
+    // 常显模式下卡片应始终可见，不受鼠标悬停/移开影响
+    const answerDisplay = document.getElementById('answer-display');
+    answerDisplay.onmouseenter = null;
+    answerDisplay.onmouseleave = null;
+}
+
+/**
+ * 切换「显示答案」常显开关
+ * 开启：当前单词及后续每个单词都会常驻显示学习卡，同时暂停智能提示/30秒卡等机制
+ * 关闭：恢复默认状态，不干扰悬停预览与智能提示/30秒卡机制
+ */
+function toggleAlwaysShowAnswer() {
+    alwaysShowAnswer = !alwaysShowAnswer;
+    updatePeekToggleUI();
+
+    if (alwaysShowAnswer) {
+        clearAllTimers();
+        isAnswerLocked = false;
+        showPersistentAnswerCard();
+    } else {
+        clearAnswerCard();
+        isAnswerLocked = false;
+        // 注意：不重置 usedHints——本词若已在常显模式下被看过，仍算「未完全掌握」
+        if (currentWord) {
+            startHintSystem();
+        }
+    }
+}
+
+/**
+ * 更新「显示答案」按钮的开关视觉状态
+ */
+function updatePeekToggleUI() {
+    const btn = document.getElementById('peek-answer-btn');
+    if (!btn) return;
+    btn.classList.toggle('btn-toggle-active', alwaysShowAnswer);
+    btn.textContent = alwaysShowAnswer ? '答案常显' : '显示答案';
+    btn.title = alwaysShowAnswer ? '常显模式已开启，点击关闭' : '悬停即可查看答案，点击开启常显模式';
+}
+
+/**
+ * 显示学习卡片（30秒卡住时）
+ */
+function showLearningCard(word) {
+    clearAllTimers();
+
+    mountLearningCard(word, {
+        badgeText: '<i data-lucide="lightbulb" class="icon-inline"></i> 学习提示',
+        hintText: '这个单词需要多加练习哦',
+        continueHandler: 'continueFromLearningCard()',
+        continueLabel: '我学会了，继续练习',
+        locked: true
+    });
+}
+
+/**
+ * 从学习卡片继续（30秒卡住）
  */
 function continueFromLearningCard() {
-    // 记录为错误（因为用了提示）
+    clearCardDisplayTimers();
+    isAnswerLocked = false;
     recordAnswer(false, true);
     practiceIndex++;
     loadNextWord();
 }
 
 /**
- * 显示学习模式（新单词先学习）
+ * 显示学习模式（新单词先学习）——预览卡，3 秒后若鼠标不在「按钮+卡片」区域则自动隐藏
  */
 function showLearningMode(word) {
-    const wordObj = getWordObject(word);
-
-    // 显示一个学习提示
-    const answerDisplay = document.getElementById('answer-display');
-    answerDisplay.innerHTML = `
-        <div class="learning-mode">
-            <div class="learning-badge">📖 新单词学习</div>
-            <div class="word-pair">
-                <span class="chinese">${wordObj.meaning}</span>
-                <span class="arrow">→</span>
-                <span class="english">${word}</span>
-            </div>
-            <p class="learning-hint">先记住这个单词，然后试着输入它</p>
-        </div>
-    `;
-    answerDisplay.classList.remove('hidden');
-
-    // 3秒后自动隐藏答案，让用户练习
-    setTimeout(() => {
-        if (currentWord === word && !document.getElementById('word-input').value) {
-            answerDisplay.classList.add('hidden');
+    mountLearningCard(word, {
+        badgeText: '<i data-lucide="book" class="icon-inline"></i> 新单词学习',
+        hintText: '先记住这个单词，然后试着输入它',
+        autoHideDelay: 3000,
+        onAutoHide: () => {
+            if (alwaysShowAnswer) return;
+            if (currentWord === word && !document.getElementById('word-input').value) {
+                clearAnswerCard();
+            }
         }
-    }, 3000);
+    });
 }
 
 /**
- * 更新输入反馈显示
+ * 更新输入反馈：仅显示剩余字母占位，不重复输入框内容
  */
 function updateInputFeedback() {
     const input = document.getElementById('word-input');
@@ -345,22 +518,16 @@ function updateInputFeedback() {
     if (!currentWord) return;
 
     const target = currentWord.toLowerCase();
+    const remaining = target.length - value.length;
 
-    // 实时显示输入反馈
-    let feedbackHTML = '';
-    for (let i = 0; i < Math.max(value.length, target.length); i++) {
-        const char = value[i] || '';
-        const targetChar = target[i] || '';
-
-        if (char === '') {
-            feedbackHTML += `<span class="char-empty">_</span>`;
-        } else if (char === targetChar) {
-            feedbackHTML += `<span class="char-correct">${char}</span>`;
-        } else {
-            feedbackHTML += `<span class="char-incorrect">${char}</span>`;
-        }
+    if (remaining <= 0) {
+        feedback.innerHTML = '';
+        return;
     }
-    feedback.innerHTML = feedbackHTML;
+
+    feedback.innerHTML = Array.from({ length: remaining }, () =>
+        '<span class="char-empty">_</span>'
+    ).join('');
 }
 
 /**
@@ -410,21 +577,22 @@ function checkInput() {
         lastInputLength = value.length;
         lastInputTime = now;
 
-        // 清除原有的提示定时器，重新开始
+        // 清除原有的字母提示定时器，重新开始（常显模式下不启动）
         if (idleTimer) clearTimeout(idleTimer);
         if (hintTimer) clearTimeout(hintTimer);
 
-        // 重新启动提示系统
-        idleTimer = setTimeout(() => {
-            if (!usedHints && currentWord && !isWordCorrect()) {
-                showNextHint();
-                hintTimer = setInterval(() => {
-                    if (currentWord && hintIndex < target.length && !isWordCorrect()) {
-                        showNextHint();
-                    }
-                }, HINT_INTERVAL);
-            }
-        }, HINT_DELAY);
+        if (!alwaysShowAnswer) {
+            idleTimer = setTimeout(() => {
+                if (!usedHints && currentWord && !isWordCorrect()) {
+                    showNextHint();
+                    hintTimer = setInterval(() => {
+                        if (currentWord && hintIndex < target.length && !isWordCorrect()) {
+                            showNextHint();
+                        }
+                    }, HINT_INTERVAL);
+                }
+            }, HINT_DELAY);
+        }
     }
 
     // 实时检查每个字母是否正确
@@ -465,7 +633,8 @@ function checkInput() {
         input.classList.add('correct');
         const feedback = document.getElementById('input-feedback');
         feedback.classList.add('feedback-correct');
-        feedback.innerHTML = usedHints ? '✓ 正确！（使用了提示）' : '✓ 正确！';
+        feedback.innerHTML = usedHints ? '<i data-lucide="check" class="icon-inline"></i> 正确！（使用了提示）' : '<i data-lucide="check" class="icon-inline"></i> 正确！';
+        lucide.createIcons();
 
         // 播放正确音效
         soundManager.playCorrect();
@@ -516,58 +685,18 @@ function recordAnswer(correct, usedHint = false) {
 }
 
 /**
- * 跳过当前单词（算作不会）
- */
-function skipWord() {
-    // showAnswer 会记录为错误
-    showAnswer();
-}
-
-/**
- * 渲染标准答案面板（showLearningMode / showLearningCard 会替换 innerHTML，需重建）
- */
-function renderAnswerPanel() {
-    const answerDisplay = document.getElementById('answer-display');
-    answerDisplay.innerHTML = `
-        <div class="correct-answer">
-            <span class="answer-label">正确答案:</span>
-            <span id="correct-word" class="word-text">${currentWord}</span>
-        </div>
-        <button class="btn btn-primary" onclick="nextWord()">下一个 →</button>
-    `;
-    answerDisplay.classList.remove('hidden');
-}
-
-/**
- * 显示答案
- */
-function showAnswer() {
-    if (!currentWord) return;
-
-    clearAllTimers();
-    renderAnswerPanel();
-
-    // 记录为错误
-    const input = document.getElementById('word-input');
-    if (!input.classList.contains('correct')) {
-        recordAnswer(false);
-    }
-}
-
-/**
  * 处理键盘事件
  */
 function handleKeydown(event) {
+    const answerDisplay = document.getElementById('answer-display');
+    const isAnswerVisible = !answerDisplay.classList.contains('hidden');
+
     if (event.key === 'Enter') {
-        if (document.getElementById('answer-display').classList.contains('hidden')) {
-            showAnswer();
-        } else {
-            practiceIndex++;
-            loadNextWord();
+        // 仅 30 秒锁定卡有「继续」按钮；悬停预览 / 常显模式不拦截 Enter
+        const continueBtn = answerDisplay.querySelector('.learning-card .btn-primary');
+        if (isAnswerVisible && continueBtn && isAnswerLocked) {
+            continueBtn.click();
         }
-    } else if (event.key === 'Tab') {
-        event.preventDefault();
-        skipWord();
     } else if (event.key === 'Escape') {
         backToSource();
     }
@@ -602,14 +731,15 @@ function showComplete() {
     if (sessionStats.total === 0) {
         message = '本次还没有练习单词';
     } else if (accuracy >= 90) {
-        message = '太棒了！你的正确率很高！🎉';
+        message = '太棒了！你的正确率很高！<i data-lucide="party-popper" class="icon-inline"></i>';
     } else if (accuracy >= 70) {
-        message = '不错！继续加油！💪';
+        message = '不错！继续加油！<i data-lucide="award" class="icon-inline"></i>';
     } else {
-        message = '需要多加练习哦 📚';
+        message = '需要多加练习哦 <i data-lucide="book-open" class="icon-inline"></i>';
     }
 
-    document.getElementById('complete-text').textContent = message;
+    document.getElementById('complete-text').innerHTML = message;
+    lucide.createIcons();
     updatePackOverview();
 }
 
@@ -618,6 +748,10 @@ function showComplete() {
  */
 function backToSource() {
     clearAllTimers();
+    alwaysShowAnswer = false;
+    isAnswerLocked = false;
+    updatePeekToggleUI();
+    clearAnswerCard();
     currentWord = null;
     document.getElementById('end-challenge-button').classList.add('hidden');
     updatePackOverview();
@@ -640,15 +774,6 @@ style.textContent = `
     letter-spacing: 0.15em;
     margin-top: 10px;
     min-height: 30px;
-}
-.char-correct {
-    color: var(--feedback-correct);
-    font-weight: normal;
-}
-.char-incorrect {
-    color: var(--feedback-incorrect);
-    font-weight: normal;
-    text-decoration: line-through;
 }
 .char-empty {
     color: var(--text-tertiary);
@@ -729,9 +854,11 @@ function toggleSound() {
  * 更新音效图标
  */
 function updateSoundIcon() {
-    const icon = document.getElementById('sound-icon');
-    if (icon) {
-        icon.textContent = soundManager.isEnabled() ? '🔊' : '🔇';
+    const container = document.getElementById('sound-icon-container');
+    if (container) {
+        const isEnabled = soundManager.isEnabled();
+        container.innerHTML = `<i data-lucide="${isEnabled ? 'volume-2' : 'volume-x'}"></i>`;
+        lucide.createIcons();
     }
 }
 
@@ -747,9 +874,11 @@ function togglePronunciation() {
  * 更新发音图标
  */
 function updatePronunciationIcon() {
-    const icon = document.getElementById('pronunciation-icon');
-    if (icon) {
-        icon.textContent = pronunciationManager.isEnabled() ? '🔈' : '🔇';
+    const container = document.getElementById('pronunciation-icon-container');
+    if (container) {
+        const isEnabled = pronunciationManager.isEnabled();
+        container.innerHTML = `<i data-lucide="${isEnabled ? 'audio-lines' : 'volume-x'}"></i>`;
+        lucide.createIcons();
     }
 }
 
@@ -789,14 +918,16 @@ function toggleTheme() {
  * 更新主题图标
  */
 function updateThemeIcon() {
-    const icon = document.getElementById('theme-icon');
-    if (icon) {
+    const container = document.getElementById('theme-icon-container');
+    if (container) {
         const isDark = document.body.classList.contains('dark-mode');
-        icon.textContent = isDark ? '☀️' : '🌙';
+        container.innerHTML = `<i data-lucide="${isDark ? 'sun' : 'moon'}"></i>`;
+        lucide.createIcons();
     }
 }
 
 // 页面加载时初始化主题
-document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-});
+// 已在 DOMContentLoaded 中统一处理
+// document.addEventListener('DOMContentLoaded', () => {
+//     initTheme();
+// });

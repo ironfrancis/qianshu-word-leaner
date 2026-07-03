@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英语单词打字练习</title>
+    <title>千树背单词</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body onload="loadDefaultWordPack()">
     <div class="container">
         <header>
-            <h1>📚 英语单词打字练习</h1>
+            <h1><i data-lucide="book-open"></i> 千树背单词</h1>
             <p class="subtitle">小学英语单词学习 - 艾宾浩斯记忆曲线</p>
         </header>
 
         <!-- 词包选择 -->
         <div id="word-source-section" class="section">
-            <h2>小学英语全部</h2>
+            <div class="pack-selector">
+                <button class="pack-tab active" data-pack="primary" onclick="switchWordPack('primary')">
+                    小学英语全部
+                </button>
+                <button class="pack-tab" data-pack="computer" onclick="switchWordPack('computer')">
+                    计算机兴趣词包
+                </button>
+            </div>
+            <h2 id="pack-title">小学英语全部</h2>
             <div class="pack-card">
                 <p class="pack-subtitle"><span id="pack-total-count">448</span> 个单词</p>
                 <div class="pack-stats">
@@ -66,7 +75,6 @@
             <!-- 单词显示区 -->
             <div class="word-display">
                 <div class="chinese-word" id="chinese-word">加载中...</div>
-                <div class="hint-text">请输入对应的英文单词</div>
             </div>
 
             <!-- 输入区域 -->
@@ -85,18 +93,17 @@
 
             <!-- 控制按钮 -->
             <div class="control-buttons">
-                <button class="btn btn-secondary" onclick="skipWord()">跳过</button>
-                <button class="btn btn-secondary" onclick="showAnswer()">显示答案</button>
+                <button id="peek-answer-btn" class="btn btn-secondary" onclick="toggleAlwaysShowAnswer()" onmouseenter="peekAnswer()" onmouseleave="hidePeekAnswer()" title="悬停即可查看答案，点击开启常显模式">显示答案</button>
                 <button id="end-challenge-button" class="btn btn-warning hidden" onclick="endChallenge()">结束练习</button>
                 <button class="btn btn-warning" onclick="backToSource()">返回首页</button>
                 <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关">
-                    <span id="pronunciation-icon">🔈</span>
+                    <span id="pronunciation-icon-container"><i data-lucide="audio-lines"></i></span>
                 </button>
                 <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关">
-                    <span id="sound-icon">🔊</span>
+                    <span id="sound-icon-container"><i data-lucide="volume-2"></i></span>
                 </button>
                 <button id="theme-toggle" class="btn btn-icon" onclick="toggleTheme()" title="切换主题">
-                    <span id="theme-icon">🌙</span>
+                    <span id="theme-icon-container"><i data-lucide="moon"></i></span>
                 </button>
             </div>
 
@@ -113,7 +120,7 @@
         <!-- 完成界面 -->
         <div id="complete-section" class="section hidden">
             <div class="complete-message">
-                <h2>🎉 太棒了！</h2>
+                <h2><i data-lucide="party-popper"></i> 太棒了！</h2>
                 <p id="complete-text">本轮练习完成！</p>
                 <div class="complete-stats">
                     <div class="stat">
