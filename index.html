@@ -27,16 +27,16 @@
             </div>
 
             <div class="pack-selector" role="tablist" aria-label="词包选择" aria-describedby="pack-selector-help">
-                <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
+                <button id="pack-tab-primary" class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" aria-controls="pack-panel" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
                     小学英语
                 </button>
-                <button class="pack-tab" data-pack="computer" role="tab" aria-selected="false" tabindex="-1" onclick="switchWordPack('computer')" onkeydown="handlePackTabKeydown(event)">
+                <button id="pack-tab-computer" class="pack-tab" data-pack="computer" role="tab" aria-selected="false" aria-controls="pack-panel" tabindex="-1" onclick="switchWordPack('computer')" onkeydown="handlePackTabKeydown(event)">
                     计算机
                 </button>
             </div>
             <p id="pack-selector-help" class="pack-help">使用 ←/→ 方向键切换词包。</p>
 
-            <article class="home-workspace" role="region" aria-label="小学英语全部，共 448 词">
+            <article id="pack-panel" class="home-workspace" role="tabpanel" aria-label="小学英语全部，共 448 词">
                 <header class="workspace-header">
                     <h2 id="pack-title">小学英语全部</h2>
                     <span class="workspace-meta"><span id="pack-total-count">448</span> 词</span>

@@ -56,11 +56,29 @@ function testPackSelectorExposesKeyboardHelp() {
     );
 }
 
-function testHomeWorkspaceExposesPackSummaryRegion() {
+function testHomeWorkspaceExposesPackSummaryPanelLabel() {
     assert.match(
         html,
-        /<article class="home-workspace" role="region" aria-label="小学英语全部，共 448 词">/,
-        '首页词包工作区应暴露当前词包和总词数的区域标签'
+        /<article id="pack-panel" class="home-workspace" role="tabpanel" aria-label="小学英语全部，共 448 词">/,
+        '首页词包工作区应暴露当前词包和总词数的面板标签'
+    );
+}
+
+function testPackTabsControlWorkspacePanel() {
+    assert.match(
+        html,
+        /<button id="pack-tab-primary" class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" aria-controls="pack-panel" tabindex="0"/,
+        '小学词包 tab 应通过 aria-controls 关联词包工作区'
+    );
+    assert.match(
+        html,
+        /<button id="pack-tab-computer" class="pack-tab" data-pack="computer" role="tab" aria-selected="false" aria-controls="pack-panel" tabindex="-1"/,
+        '计算机词包 tab 应通过 aria-controls 关联词包工作区'
+    );
+    assert.match(
+        html,
+        /<article id="pack-panel" class="home-workspace" role="tabpanel" aria-label="小学英语全部，共 448 词">/,
+        '首页词包工作区应作为 tabpanel 暴露给辅助技术'
     );
 }
 
@@ -69,7 +87,8 @@ function run() {
     testSessionModeActionsExposeKeyboardHelp();
     testPackMetricsExposeReadableLabels();
     testPackSelectorExposesKeyboardHelp();
-    testHomeWorkspaceExposesPackSummaryRegion();
+    testHomeWorkspaceExposesPackSummaryPanelLabel();
+    testPackTabsControlWorkspacePanel();
     console.log('home-a11y tests passed');
 }
 
