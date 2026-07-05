@@ -8,7 +8,8 @@
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android",
-    "start": "npx serve ."
+    "start": "npx serve .",
+    "test:feed": "node test/feed-builder.test.js"
   },
   "keywords": [
     "english-learning",
