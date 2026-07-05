@@ -89,7 +89,7 @@ npm test
 - `test/pronunciation.test.js` — 有道发音 URL 生成、美/英音切换、音量 clamp
 - `test/typing-game.test.js` — 会话空统计结构、挑战模式批次数、学习卡 HTML 生成、进度/正确率格式化与 live 摘要
 - `test/sound-effects.test.js` — 音效开关 toggle、音量 clamp、禁用时跳过播放
-- `test/home-a11y.test.js` — 首页练习模式按钮组的无障碍语义与键盘提示文案
+- `test/home-a11y.test.js` — 首页练习模式按钮组与词包统计卡片的无障碍语义
 
 修改 `js/feed-builder.js`、`js/data-loader.js`、`js/memory.js`、`js/pronunciation.js`、`js/typing-game.js` 或 `js/sound-effects.js` 后，请先运行 `npm test`。
 

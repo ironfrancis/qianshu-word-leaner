@@ -30,7 +30,16 @@ function loadDataLoaderFunctions(dictionaryEntries = []) {
         : '';
 
     vm.createContext(context);
-    return vm.runInContext(`${source}\n${dictionarySetup}\n({ parseCSVLine, getMeaning, resolvePackTabNavigation, getPackTabRovingTabindex });`, context);
+    return vm.runInContext(
+        `${source}\n${dictionarySetup}\n({
+            parseCSVLine,
+            getMeaning,
+            resolvePackTabNavigation,
+            getPackTabRovingTabindex,
+            buildPackMetricLabel: typeof buildPackMetricLabel === 'function' ? buildPackMetricLabel : undefined
+        });`,
+        context
+    );
 }
 
 function testFetchPathsUseSiteRootDataDirectory() {
@@ -165,6 +174,14 @@ function testGetPackTabRovingTabindexMarksActiveTab() {
     assert.strictEqual(getPackTabRovingTabindex(1, 0), '-1');
 }
 
+function testBuildPackMetricLabelCombinesLabelCountAndUnit() {
+    const { buildPackMetricLabel } = loadDataLoaderFunctions();
+
+    assert.strictEqual(typeof buildPackMetricLabel, 'function', '应提供首页统计卡片可读标签生成函数');
+    assert.strictEqual(buildPackMetricLabel(12, '待复习'), '待复习 12 词');
+    assert.strictEqual(buildPackMetricLabel(0, '错题'), '错题 0 词');
+}
+
 const tests = [
     testFetchPathsUseSiteRootDataDirectory,
     testWordPackConfigIsPresent,
@@ -180,7 +197,8 @@ const tests = [
     testResolvePackTabNavigationMovesLeftWithWrap,
     testResolvePackTabNavigationSupportsHomeAndEnd,
     testResolvePackTabNavigationIgnoresUnrelatedKeys,
-    testGetPackTabRovingTabindexMarksActiveTab
+    testGetPackTabRovingTabindexMarksActiveTab,
+    testBuildPackMetricLabelCombinesLabelCountAndUnit
 ];
 
 for (const test of tests) {

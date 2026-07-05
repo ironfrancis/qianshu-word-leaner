@@ -25,9 +25,28 @@ function testSessionModeActionsExposeKeyboardHelp() {
     );
 }
 
+function testPackMetricsExposeReadableLabels() {
+    assert.match(
+        html,
+        /<div class="metric-cell" role="group" data-metric-label="待复习" aria-label="待复习 0 词">/,
+        '待复习统计应把数字、含义和单位合并为可读标签'
+    );
+    assert.match(
+        html,
+        /<div class="metric-cell" role="group" data-metric-label="新词" aria-label="新词 0 词">/,
+        '新词统计应把数字、含义和单位合并为可读标签'
+    );
+    assert.match(
+        html,
+        /<div class="metric-cell" role="group" data-metric-label="错题" aria-label="错题 0 词">/,
+        '错题统计应把数字、含义和单位合并为可读标签'
+    );
+}
+
 function run() {
     testSessionModeActionsHaveAccessibleGroup();
     testSessionModeActionsExposeKeyboardHelp();
+    testPackMetricsExposeReadableLabels();
     console.log('home-a11y tests passed');
 }
 
