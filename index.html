@@ -27,10 +27,10 @@
             </div>
 
             <div class="pack-selector" role="tablist" aria-label="词包选择">
-                <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" onclick="switchWordPack('primary')">
+                <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
                     小学英语
                 </button>
-                <button class="pack-tab" data-pack="computer" role="tab" aria-selected="false" onclick="switchWordPack('computer')">
+                <button class="pack-tab" data-pack="computer" role="tab" aria-selected="false" tabindex="-1" onclick="switchWordPack('computer')" onkeydown="handlePackTabKeydown(event)">
                     计算机
                 </button>
             </div>
@@ -147,6 +147,7 @@
 
         <!-- Session 小结页 -->
         <div id="complete-section" class="section hidden">
+            <div id="complete-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
             <div class="complete-message">
                 <h2 id="complete-title">本轮完成！</h2>
                 <p id="complete-text">本轮练习完成！</p>
@@ -197,9 +198,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
     <script src="js/memory.js?v=20260705d"></script>
     <script src="js/feed-builder.js?v=20260705d"></script>
-    <script src="js/data-loader.js?v=20260705"></script>
+    <script src="js/data-loader.js?v=20260705g"></script>
     <script src="js/sound-effects.js?v=20260705"></script>
     <script src="js/pronunciation.js?v=20260705"></script>
-    <script src="js/typing-game.js?v=20260705f"></script>
+    <script src="js/typing-game.js?v=20260705g"></script>
 </body>
 </html>

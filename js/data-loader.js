@@ -286,13 +286,82 @@ function updatePackOverview() {
 }
 
 /**
+ * 根据按键计算下一个 tab 索引（WAI-ARIA Tabs 键盘模式）
+ * @param {object} options
+ * @param {number} options.currentIndex
+ * @param {number} options.tabCount
+ * @param {string} options.key
+ * @returns {number|null}
+ */
+function resolvePackTabNavigation({ currentIndex, tabCount, key }) {
+    if (tabCount <= 0 || currentIndex < 0) return null;
+
+    switch (key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+            return (currentIndex + 1) % tabCount;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+            return (currentIndex - 1 + tabCount) % tabCount;
+        case 'Home':
+            return 0;
+        case 'End':
+            return tabCount - 1;
+        default:
+            return null;
+    }
+}
+
+/**
+ * 获取词包 tab 的 roving tabindex 值
+ */
+function getPackTabRovingTabindex(activeIndex, tabIndex) {
+    return activeIndex === tabIndex ? '0' : '-1';
+}
+
+/**
+ * 获取词包 tab 元素列表
+ */
+function getPackTabs() {
+    return Array.from(document.querySelectorAll('.pack-tab[role="tab"]'));
+}
+
+/**
+ * 词包 tab 键盘导航（自动激活模式）
+ */
+function handlePackTabKeydown(event) {
+    const tabs = getPackTabs();
+    const currentIndex = tabs.indexOf(event.currentTarget);
+    const nextIndex = resolvePackTabNavigation({
+        currentIndex,
+        tabCount: tabs.length,
+        key: event.key
+    });
+
+    if (nextIndex === null || nextIndex === currentIndex) return;
+
+    event.preventDefault();
+    tabs.forEach((tab, index) => {
+        tab.setAttribute('tabindex', getPackTabRovingTabindex(nextIndex, index));
+    });
+    tabs[nextIndex].focus();
+
+    const packId = tabs[nextIndex].dataset.pack;
+    if (packId) switchWordPack(packId);
+}
+
+/**
  * 更新词包选择器 UI
  */
 function updatePackSelectorUI() {
-    document.querySelectorAll('.pack-tab').forEach(tab => {
+    const tabs = getPackTabs();
+    const activeIndex = tabs.findIndex(tab => tab.dataset.pack === currentPackId);
+
+    tabs.forEach((tab, index) => {
         const isActive = tab.dataset.pack === currentPackId;
         tab.classList.toggle('active', isActive);
         tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        tab.setAttribute('tabindex', getPackTabRovingTabindex(activeIndex, index));
     });
 }
 

@@ -147,7 +147,10 @@ function loadTypingGameHelpers() {
         formatSessionProgress: context.formatSessionProgress,
         formatSessionAccuracy: context.formatSessionAccuracy,
         computeProgressPercent: context.computeProgressPercent,
-        buildStatsLiveSummary: context.buildStatsLiveSummary
+        buildStatsLiveSummary: context.buildStatsLiveSummary,
+        buildCompleteMessage: context.buildCompleteMessage,
+        buildCompleteBatchInfo: context.buildCompleteBatchInfo,
+        buildCompleteLiveSummary: context.buildCompleteLiveSummary
     };
 }
 
@@ -298,6 +301,68 @@ function testBuildStatsLiveSummaryIncludesAllFields() {
     assert.match(summary, /连续正确 2/);
 }
 
+function testBuildCompleteMessageHandlesHighAccuracy() {
+    const { buildCompleteMessage } = loadTypingGameHelpers();
+
+    const message = buildCompleteMessage({
+        poolExhausted: false,
+        stats: { total: 10 },
+        accuracy: 95
+    });
+
+    assert.match(message, /正确率很高/);
+}
+
+function testBuildCompleteMessageHandlesEmptySession() {
+    const { buildCompleteMessage } = loadTypingGameHelpers();
+
+    const message = buildCompleteMessage({
+        poolExhausted: false,
+        stats: { total: 0 },
+        accuracy: 0
+    });
+
+    assert.strictEqual(message, '本次还没有练习单词');
+}
+
+function testBuildCompleteBatchInfoForChallengeMode() {
+    const { buildCompleteBatchInfo } = loadTypingGameHelpers();
+
+    const info = buildCompleteBatchInfo({
+        sessionType: 'challenge',
+        stats: { total: 40 },
+        batches: 2,
+        currentBatchSize: 20,
+        sessionSize: 20
+    });
+
+    assert.strictEqual(info, '共练习 2 批 · 累计 40 词');
+}
+
+function testBuildCompleteLiveSummaryIncludesStats() {
+    const { buildCompleteLiveSummary } = loadTypingGameHelpers();
+
+    const summary = buildCompleteLiveSummary({
+        title: '本轮完成！',
+        message: '不错！继续加油！',
+        batchInfo: '本批 15 词',
+        stats: {
+            total: 15,
+            correct: 12,
+            newWords: 5,
+            reviewWords: 8,
+            mistakeWords: 2
+        },
+        accuracy: 80
+    });
+
+    assert.match(summary, /本轮完成/);
+    assert.match(summary, /继续加油/);
+    assert.match(summary, /本批 15 词/);
+    assert.match(summary, /总单词 15，正确 12，正确率 80%/);
+    assert.match(summary, /新词 5，复习 8，错题 2/);
+}
+
 const tests = [
     testCreateEmptySessionStatsShape,
     testGetSessionBatchCountReturnsZeroWhenNoPractice,
@@ -310,7 +375,11 @@ const tests = [
     testFormatSessionAccuracyReturnsDashWhenEmpty,
     testFormatSessionAccuracyRoundsPercent,
     testComputeProgressPercentHandlesZeroTotal,
-    testBuildStatsLiveSummaryIncludesAllFields
+    testBuildStatsLiveSummaryIncludesAllFields,
+    testBuildCompleteMessageHandlesHighAccuracy,
+    testBuildCompleteMessageHandlesEmptySession,
+    testBuildCompleteBatchInfoForChallengeMode,
+    testBuildCompleteLiveSummaryIncludesStats
 ];
 
 let passed = 0;
