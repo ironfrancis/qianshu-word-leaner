@@ -757,13 +757,19 @@ function setCompleteText(id, value, fallbackSelector) {
 
 /**
  * 计算本次 session 涉及的批次数
+ * @param {object} [state] - 可选状态快照，便于 Node 回归测试注入
  */
-function getSessionBatchCount() {
-    if (sessionStats.total === 0) return 0;
-    if (practiceQueue.length === 0 && practiceIndex === 0 && batchIndex > 1) {
-        return batchIndex - 1;
+function getSessionBatchCount(state = {}) {
+    const stats = state.sessionStats ?? sessionStats;
+    const queue = state.practiceQueue ?? practiceQueue;
+    const index = state.practiceIndex ?? practiceIndex;
+    const batch = state.batchIndex ?? batchIndex;
+
+    if (stats.total === 0) return 0;
+    if (queue.length === 0 && index === 0 && batch > 1) {
+        return batch - 1;
     }
-    return batchIndex;
+    return batch;
 }
 
 /**
