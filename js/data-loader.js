@@ -290,7 +290,9 @@ function updatePackOverview() {
  */
 function updatePackSelectorUI() {
     document.querySelectorAll('.pack-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.pack === currentPackId);
+        const isActive = tab.dataset.pack === currentPackId;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 }
 

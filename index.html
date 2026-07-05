@@ -4,43 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>千树背单词</title>
-    <link rel="stylesheet" href="css/style.css?v=20260705">
+    <link rel="stylesheet" href="css/style.css?v=20260705b">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body onload="loadDefaultWordPack()">
     <div class="container">
-        <header>
-            <h1><i data-lucide="book-open"></i> 千树背单词</h1>
-            <p class="subtitle">小学英语单词学习 - 艾宾浩斯记忆曲线</p>
+        <header class="site-header">
+            <div class="site-brand">
+                <i data-lucide="book-open"></i>
+                <span>千树背单词</span>
+            </div>
+            <button id="theme-toggle" class="btn btn-icon btn-ghost" onclick="toggleTheme()" title="切换主题">
+                <span id="theme-icon-container"><i data-lucide="moon"></i></span>
+            </button>
         </header>
 
-        <!-- 词包选择 -->
-        <div id="word-source-section" class="section">
-            <div class="pack-selector">
-                <button class="pack-tab active" data-pack="primary" onclick="switchWordPack('primary')">
-                    小学英语全部
+        <!-- 首页 -->
+        <div id="word-source-section" class="section home-section">
+            <div class="home-intro">
+                <p class="home-eyebrow">艾宾浩斯记忆曲线</p>
+                <h1 class="home-headline">看中文，打出英文</h1>
+            </div>
+
+            <div class="pack-selector" role="tablist" aria-label="词包选择">
+                <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" onclick="switchWordPack('primary')">
+                    小学英语
                 </button>
-                <button class="pack-tab" data-pack="computer" onclick="switchWordPack('computer')">
-                    计算机兴趣词包
+                <button class="pack-tab" data-pack="computer" role="tab" aria-selected="false" onclick="switchWordPack('computer')">
+                    计算机
                 </button>
             </div>
-            <h2 id="pack-title">小学英语全部</h2>
-            <div class="pack-card">
-                <p class="pack-subtitle"><span id="pack-total-count">448</span> 个单词</p>
-                <div class="pack-stats">
-                    <span>待复习 <strong id="pack-review-count">0</strong></span>
-                    <span>新词 <strong id="pack-new-count">0</strong></span>
-                    <span>错题 <strong id="pack-mistake-count">0</strong></span>
+
+            <article class="home-workspace">
+                <header class="workspace-header">
+                    <h2 id="pack-title">小学英语全部</h2>
+                    <span class="workspace-meta"><span id="pack-total-count">448</span> 词</span>
+                </header>
+
+                <div class="home-metrics">
+                    <div class="metric-cell">
+                        <span id="pack-review-count" class="metric-num">0</span>
+                        <span class="metric-label">待复习</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span id="pack-new-count" class="metric-num">0</span>
+                        <span class="metric-label">新词</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span id="pack-mistake-count" class="metric-num">0</span>
+                        <span class="metric-label">错题</span>
+                    </div>
                 </div>
-                <div class="session-buttons">
-                    <button class="btn btn-primary session-btn" onclick="startSession('quick')">
-                        小试牛刀 · 20 词
+
+                <div class="home-actions">
+                    <button class="btn btn-cta session-btn" onclick="startSession('quick')">
+                        <span class="btn-label">小试牛刀</span>
+                        <span class="btn-desc">20 词 · 混合练习</span>
                     </button>
-                    <button class="btn btn-success session-btn" onclick="startSession('challenge')">
-                        挑战模式 · 每批 20 词
+                    <button class="btn btn-outline session-btn" onclick="startSession('challenge')">
+                        <span class="btn-label">挑战模式</span>
+                        <span class="btn-desc">每批 20 词</span>
                     </button>
                 </div>
-            </div>
+            </article>
         </div>
 
         <!-- 加载中提示 -->
@@ -103,9 +129,6 @@
                 </button>
                 <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关">
                     <span id="sound-icon-container"><i data-lucide="volume-2"></i></span>
-                </button>
-                <button id="theme-toggle" class="btn btn-icon" onclick="toggleTheme()" title="切换主题">
-                    <span id="theme-icon-container"><i data-lucide="moon"></i></span>
                 </button>
             </div>
 
