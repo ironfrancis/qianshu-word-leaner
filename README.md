@@ -71,6 +71,8 @@ npx serve .
 
 ### 练习档位
 
+在首页模式选择区可使用 `Tab` 在「小试牛刀」和「挑战模式」之间切换，按 `Enter` 或空格开始练习。
+
 **小试牛刀**（推荐日常使用）
 - 每轮目标 20 个单词
 - 自动混合：到期复习词 + 新词 + 错题加权词
@@ -113,6 +115,7 @@ npx serve .
 
 | 快捷键 | 功能 |
 |--------|------|
+| `←` / `→` | 在首页切换词包 |
 | `Enter` | 显示答案 / 下一个单词 |
 | `Esc` | 返回首页 |
 
@@ -173,7 +176,8 @@ qianshu-word-leaner/
 │   ├── memory.test.js         # 艾宾浩斯记忆引擎回归测试
 │   ├── pronunciation.test.js  # 发音 URL 与配置回归测试
 │   ├── typing-game.test.js    # 会话统计格式化、学习卡 HTML 与 live 摘要回归测试
-│   └── sound-effects.test.js  # 音效开关与音量 clamp 回归测试
+│   ├── sound-effects.test.js  # 音效开关与音量 clamp 回归测试
+│   └── home-a11y.test.js      # 首页模式选择与统计卡片无障碍回归测试
 ├── capacitor.config.json   # Capacitor 移动端配置
 ├── package.json            # npm 依赖与脚本
 ├── ANDROID_BUILD.md        # Android 打包指南
