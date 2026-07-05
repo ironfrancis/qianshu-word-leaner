@@ -19,6 +19,8 @@ let practiceIndex = 0;
 let sessionSeen = new Set();
 let batchIndex = 1;
 let currentBatchSize = 0;
+let sessionEnded = false;
+let answerAdvanceTimer = null;
 let sessionStats = {
     total: 0,
     correct: 0,
@@ -64,10 +66,12 @@ function clearAllTimers() {
     if (idleTimer) clearTimeout(idleTimer);
     if (hintTimer) clearTimeout(hintTimer);
     if (learningCardTimer) clearTimeout(learningCardTimer);
+    if (answerAdvanceTimer) clearTimeout(answerAdvanceTimer);
     clearCardDisplayTimers();
     idleTimer = null;
     hintTimer = null;
     learningCardTimer = null;
+    answerAdvanceTimer = null;
 }
 
 /**
@@ -103,6 +107,7 @@ function startSession(type) {
     practiceIndex = 0;
     sessionSeen = new Set();
     batchIndex = 1;
+    sessionEnded = false;
     sessionStats = createEmptySessionStats();
     alwaysShowAnswer = false;
     updatePeekToggleUI();
@@ -156,6 +161,8 @@ function showEmptyState(message) {
  * 加载下一个单词
  */
 function loadNextWord() {
+    if (sessionEnded) return;
+
     if (practiceIndex >= practiceQueue.length) {
         if (sessionType === 'challenge') {
             batchIndex++;
@@ -179,15 +186,6 @@ function loadNextWord() {
 
     currentWord = practiceQueue[practiceIndex];
     const wordObj = getWordObject(currentWord);
-    const wordRecord = memoryManager.getWord(currentWord);
-
-    if (wordRecord.totalAttempts === 0) {
-        sessionStats.newWords++;
-    } else if (wordRecord.errorCount > wordRecord.correctCount) {
-        sessionStats.mistakeWords++;
-    } else {
-        sessionStats.reviewWords++;
-    }
 
     // 显示中文
     document.getElementById('chinese-word').textContent = wordObj.meaning;
@@ -206,13 +204,16 @@ function loadNextWord() {
     if (alwaysShowAnswer) {
         // 常显模式：直接展示该词学习卡，不需要新词预览或智能提示
         showPersistentAnswerCard();
-    } else if (wordRecord && wordRecord.totalAttempts === 0) {
-        // 新单词：先显示答案让用户学习
-        setTimeout(() => {
-            showLearningMode(currentWord);
-        }, 300);
-        startHintSystem();
     } else {
+        const wordRecord = memoryManager.getWord(currentWord);
+        if (wordRecord && wordRecord.totalAttempts === 0) {
+            // 新单词：先显示答案让用户学习
+            setTimeout(() => {
+                if (!sessionEnded && currentWord === wordObj.word) {
+                    showLearningMode(currentWord);
+                }
+            }, 300);
+        }
         // 启动提示定时器
         startHintSystem();
     }
@@ -485,6 +486,7 @@ function showLearningCard(word) {
  * 从学习卡片继续（30秒卡住）
  */
 function continueFromLearningCard() {
+    if (sessionEnded) return;
     clearCardDisplayTimers();
     isAnswerLocked = false;
     recordAnswer(false, true);
@@ -645,7 +647,9 @@ function checkInput() {
         recordAnswer(true, usedHints);
 
         // 短暂延迟后进入下一个
-        setTimeout(() => {
+        answerAdvanceTimer = setTimeout(() => {
+            answerAdvanceTimer = null;
+            if (sessionEnded) return;
             practiceIndex++;
             loadNextWord();
         }, 800);
@@ -657,13 +661,27 @@ function checkInput() {
     }
 }
 
+function recordWordCategory() {
+    const wordRecord = memoryManager.getWord(currentWord);
+    if (wordRecord.totalAttempts === 0) {
+        sessionStats.newWords++;
+    } else if (wordRecord.errorCount > wordRecord.correctCount) {
+        sessionStats.mistakeWords++;
+    } else {
+        sessionStats.reviewWords++;
+    }
+}
+
 /**
  * 记录答题结果
  * @param {boolean} correct - 是否正确
  * @param {boolean} usedHint - 是否使用了提示
  */
 function recordAnswer(correct, usedHint = false) {
+    if (!currentWord || sessionEnded) return;
+
     sessionStats.total++;
+    recordWordCategory();
     if (correct) {
         // 使用了提示就算正确，但不能算完全掌握
         if (usedHint) {
@@ -708,8 +726,25 @@ function handleKeydown(event) {
  * 结束挑战模式
  */
 function endChallenge() {
+    if (sessionEnded) return;
+    sessionEnded = true;
     clearAllTimers();
     showComplete();
+}
+
+/**
+ * 安全写入小结页 DOM 文本
+ */
+function setCompleteText(id, value, fallbackSelector) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = value;
+        return;
+    }
+    if (fallbackSelector) {
+        const fallback = document.querySelector(fallbackSelector);
+        if (fallback) fallback.textContent = value;
+    }
 }
 
 /**
@@ -729,39 +764,47 @@ function getSessionBatchCount() {
  * @param {boolean} options.poolExhausted - 词池是否已耗尽
  */
 function showComplete({ poolExhausted = false } = {}) {
+    sessionEnded = true;
     clearAllTimers();
+
+    const stats = { ...sessionStats };
     showSection('complete-section');
 
-    const accuracy = sessionStats.total > 0
-        ? Math.round((sessionStats.correct / sessionStats.total) * 100)
+    const accuracy = stats.total > 0
+        ? Math.round((stats.correct / stats.total) * 100)
         : 0;
 
-    document.getElementById('complete-title').textContent =
-        sessionType === 'challenge' ? '挑战结束！' : '本轮完成！';
-    document.getElementById('complete-total').textContent = sessionStats.total;
-    document.getElementById('complete-correct').textContent = sessionStats.correct;
-    document.getElementById('complete-accuracy').textContent = `${accuracy}%`;
-    document.getElementById('complete-new').textContent = sessionStats.newWords;
-    document.getElementById('complete-review').textContent = sessionStats.reviewWords;
-    document.getElementById('complete-mistake').textContent = sessionStats.mistakeWords;
+    setCompleteText(
+        'complete-title',
+        sessionType === 'challenge' ? '挑战结束！' : '本轮完成！',
+        '#complete-section h2'
+    );
+    setCompleteText('complete-total', stats.total);
+    setCompleteText('complete-correct', stats.correct);
+    setCompleteText('complete-accuracy', `${accuracy}%`);
+    setCompleteText('complete-new', stats.newWords);
+    setCompleteText('complete-review', stats.reviewWords);
+    setCompleteText('complete-mistake', stats.mistakeWords);
 
     const batchInfoEl = document.getElementById('complete-batch-info');
-    if (sessionType === 'challenge' && sessionStats.total > 0) {
-        const batches = getSessionBatchCount();
-        batchInfoEl.textContent = `共练习 ${batches} 批 · 累计 ${sessionStats.total} 词`;
-        batchInfoEl.classList.remove('hidden');
-    } else if (sessionType === 'quick' && currentBatchSize > 0 && currentBatchSize < SESSION_SIZE) {
-        batchInfoEl.textContent = `本批 ${currentBatchSize} 词`;
-        batchInfoEl.classList.remove('hidden');
-    } else {
-        batchInfoEl.classList.add('hidden');
-        batchInfoEl.textContent = '';
+    if (batchInfoEl) {
+        if (sessionType === 'challenge' && stats.total > 0) {
+            const batches = getSessionBatchCount();
+            batchInfoEl.textContent = `共练习 ${batches} 批 · 累计 ${stats.total} 词`;
+            batchInfoEl.classList.remove('hidden');
+        } else if (sessionType === 'quick' && currentBatchSize > 0 && currentBatchSize < SESSION_SIZE) {
+            batchInfoEl.textContent = `本批 ${currentBatchSize} 词`;
+            batchInfoEl.classList.remove('hidden');
+        } else {
+            batchInfoEl.classList.add('hidden');
+            batchInfoEl.textContent = '';
+        }
     }
 
     let message;
     if (poolExhausted) {
         message = '太棒了，暂无更多待练单词！<i data-lucide="party-popper" class="icon-inline"></i>';
-    } else if (sessionStats.total === 0) {
+    } else if (stats.total === 0) {
         message = '本次还没有练习单词';
     } else if (accuracy >= 90) {
         message = '太棒了！你的正确率很高！<i data-lucide="party-popper" class="icon-inline"></i>';
@@ -771,7 +814,8 @@ function showComplete({ poolExhausted = false } = {}) {
         message = '需要多加练习哦 <i data-lucide="book-open" class="icon-inline"></i>';
     }
 
-    document.getElementById('complete-text').innerHTML = message;
+    const completeTextEl = document.getElementById('complete-text');
+    if (completeTextEl) completeTextEl.innerHTML = message;
     lucide.createIcons();
     updatePackOverview();
 }
@@ -780,6 +824,7 @@ function showComplete({ poolExhausted = false } = {}) {
  * 返回单词源选择
  */
 function backToSource() {
+    sessionEnded = true;
     clearAllTimers();
     alwaysShowAnswer = false;
     isAnswerLocked = false;
@@ -919,6 +964,8 @@ function updatePronunciationIcon() {
  * 下一个单词（从答案显示后）
  */
 function nextWord() {
+    if (!currentWord || sessionEnded) return;
+    recordAnswer(false, true);
     practiceIndex++;
     loadNextWord();
 }
