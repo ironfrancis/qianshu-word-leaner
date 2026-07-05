@@ -30,7 +30,7 @@ function loadDataLoaderFunctions(dictionaryEntries = []) {
         : '';
 
     vm.createContext(context);
-    return vm.runInContext(`${source}\n${dictionarySetup}\n({ parseCSVLine, getMeaning });`, context);
+    return vm.runInContext(`${source}\n${dictionarySetup}\n({ parseCSVLine, getMeaning, resolvePackTabNavigation, getPackTabRovingTabindex });`, context);
 }
 
 function testFetchPathsUseSiteRootDataDirectory() {
@@ -114,6 +114,57 @@ function testGetMeaningReturnsFallbackWhenMissing() {
     assert.strictEqual(getMeaning('missing-word'), '未找到翻译');
 }
 
+function testResolvePackTabNavigationMovesRightWithWrap() {
+    const { resolvePackTabNavigation } = loadDataLoaderFunctions();
+
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 0, tabCount: 2, key: 'ArrowRight' }),
+        1
+    );
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 1, tabCount: 2, key: 'ArrowRight' }),
+        0
+    );
+}
+
+function testResolvePackTabNavigationMovesLeftWithWrap() {
+    const { resolvePackTabNavigation } = loadDataLoaderFunctions();
+
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 0, tabCount: 2, key: 'ArrowLeft' }),
+        1
+    );
+}
+
+function testResolvePackTabNavigationSupportsHomeAndEnd() {
+    const { resolvePackTabNavigation } = loadDataLoaderFunctions();
+
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 1, tabCount: 2, key: 'Home' }),
+        0
+    );
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 0, tabCount: 2, key: 'End' }),
+        1
+    );
+}
+
+function testResolvePackTabNavigationIgnoresUnrelatedKeys() {
+    const { resolvePackTabNavigation } = loadDataLoaderFunctions();
+
+    assert.strictEqual(
+        resolvePackTabNavigation({ currentIndex: 0, tabCount: 2, key: 'Enter' }),
+        null
+    );
+}
+
+function testGetPackTabRovingTabindexMarksActiveTab() {
+    const { getPackTabRovingTabindex } = loadDataLoaderFunctions();
+
+    assert.strictEqual(getPackTabRovingTabindex(1, 1), '0');
+    assert.strictEqual(getPackTabRovingTabindex(1, 0), '-1');
+}
+
 const tests = [
     testFetchPathsUseSiteRootDataDirectory,
     testWordPackConfigIsPresent,
@@ -124,7 +175,12 @@ const tests = [
     testGetMeaningFallsBackToLowercase,
     testGetMeaningFallsBackToCapitalizedForm,
     testGetMeaningFallsBackToUppercaseForm,
-    testGetMeaningReturnsFallbackWhenMissing
+    testGetMeaningReturnsFallbackWhenMissing,
+    testResolvePackTabNavigationMovesRightWithWrap,
+    testResolvePackTabNavigationMovesLeftWithWrap,
+    testResolvePackTabNavigationSupportsHomeAndEnd,
+    testResolvePackTabNavigationIgnoresUnrelatedKeys,
+    testGetPackTabRovingTabindexMarksActiveTab
 ];
 
 for (const test of tests) {

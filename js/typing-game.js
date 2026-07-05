@@ -838,6 +838,68 @@ function getSessionBatchCount(state = {}) {
 }
 
 /**
+ * 生成小结页鼓励文案（纯文本，供 aria-live 使用）
+ */
+function buildCompleteMessage({ poolExhausted, stats, accuracy }) {
+    if (poolExhausted) {
+        return '太棒了，暂无更多待练单词！';
+    }
+    if (stats.total === 0) {
+        return '本次还没有练习单词';
+    }
+    if (accuracy >= 90) {
+        return '太棒了！你的正确率很高！';
+    }
+    if (accuracy >= 70) {
+        return '不错！继续加油！';
+    }
+    return '需要多加练习哦';
+}
+
+/**
+ * 为视觉小结文案追加 Lucide 图标
+ */
+function decorateCompleteMessageHTML(message) {
+    if (message.includes('暂无更多待练单词') || message.includes('正确率很高')) {
+        return `${message}<i data-lucide="party-popper" class="icon-inline"></i>`;
+    }
+    if (message.includes('继续加油')) {
+        return `${message}<i data-lucide="award" class="icon-inline"></i>`;
+    }
+    if (message.includes('多加练习')) {
+        return `${message} <i data-lucide="book-open" class="icon-inline"></i>`;
+    }
+    return message;
+}
+
+/**
+ * 生成小结页批次说明
+ */
+function buildCompleteBatchInfo({ sessionType, stats, batches, currentBatchSize, sessionSize }) {
+    if (sessionType === 'challenge' && stats.total > 0) {
+        return `共练习 ${batches} 批 · 累计 ${stats.total} 词`;
+    }
+    if (sessionType === 'quick' && currentBatchSize > 0 && currentBatchSize < sessionSize) {
+        return `本批 ${currentBatchSize} 词`;
+    }
+    return '';
+}
+
+/**
+ * 生成供屏幕阅读器播报的小结摘要
+ */
+function buildCompleteLiveSummary({ title, message, batchInfo, stats, accuracy }) {
+    const parts = [title];
+    if (message) parts.push(message);
+    if (batchInfo) parts.push(batchInfo);
+    parts.push(
+        `总单词 ${stats.total}，正确 ${stats.correct}，正确率 ${accuracy}%`,
+        `新词 ${stats.newWords}，复习 ${stats.reviewWords}，错题 ${stats.mistakeWords}`
+    );
+    return parts.join('，');
+}
+
+/**
  * 显示 Session 小结页
  * @param {object} options
  * @param {boolean} options.poolExhausted - 词池是否已耗尽
@@ -857,11 +919,8 @@ function showComplete({ poolExhausted = false } = {}) {
         ? Math.round((stats.correct / stats.total) * 100)
         : 0;
 
-    setCompleteText(
-        'complete-title',
-        sessionType === 'challenge' ? '挑战结束！' : '本轮完成！',
-        '#complete-section h2'
-    );
+    const title = sessionType === 'challenge' ? '挑战结束！' : '本轮完成！';
+    setCompleteText('complete-title', title, '#complete-section h2');
     setCompleteText('complete-total', stats.total);
     setCompleteText('complete-correct', stats.correct);
     setCompleteText('complete-accuracy', `${accuracy}%`);
@@ -869,14 +928,19 @@ function showComplete({ poolExhausted = false } = {}) {
     setCompleteText('complete-review', stats.reviewWords);
     setCompleteText('complete-mistake', stats.mistakeWords);
 
+    const batches = getSessionBatchCount();
+    const batchInfo = buildCompleteBatchInfo({
+        sessionType,
+        stats,
+        batches,
+        currentBatchSize,
+        sessionSize: SESSION_SIZE
+    });
+
     const batchInfoEl = document.getElementById('complete-batch-info');
     if (batchInfoEl) {
-        if (sessionType === 'challenge' && stats.total > 0) {
-            const batches = getSessionBatchCount();
-            batchInfoEl.textContent = `共练习 ${batches} 批 · 累计 ${stats.total} 词`;
-            batchInfoEl.classList.remove('hidden');
-        } else if (sessionType === 'quick' && currentBatchSize > 0 && currentBatchSize < SESSION_SIZE) {
-            batchInfoEl.textContent = `本批 ${currentBatchSize} 词`;
+        if (batchInfo) {
+            batchInfoEl.textContent = batchInfo;
             batchInfoEl.classList.remove('hidden');
         } else {
             batchInfoEl.classList.add('hidden');
@@ -884,21 +948,22 @@ function showComplete({ poolExhausted = false } = {}) {
         }
     }
 
-    let message;
-    if (poolExhausted) {
-        message = '太棒了，暂无更多待练单词！<i data-lucide="party-popper" class="icon-inline"></i>';
-    } else if (stats.total === 0) {
-        message = '本次还没有练习单词';
-    } else if (accuracy >= 90) {
-        message = '太棒了！你的正确率很高！<i data-lucide="party-popper" class="icon-inline"></i>';
-    } else if (accuracy >= 70) {
-        message = '不错！继续加油！<i data-lucide="award" class="icon-inline"></i>';
-    } else {
-        message = '需要多加练习哦 <i data-lucide="book-open" class="icon-inline"></i>';
-    }
+    const message = buildCompleteMessage({ poolExhausted, stats, accuracy });
 
     const completeTextEl = document.getElementById('complete-text');
-    if (completeTextEl) completeTextEl.innerHTML = message;
+    if (completeTextEl) completeTextEl.innerHTML = decorateCompleteMessageHTML(message);
+
+    const completeLiveEl = document.getElementById('complete-live');
+    if (completeLiveEl) {
+        completeLiveEl.textContent = buildCompleteLiveSummary({
+            title,
+            message,
+            batchInfo,
+            stats,
+            accuracy
+        });
+    }
+
     lucide.createIcons();
     updatePackOverview();
 }
