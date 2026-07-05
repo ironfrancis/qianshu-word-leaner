@@ -284,6 +284,12 @@ body {
     background: var(--bg-paper-warm);
 }
 
+.btn:focus-visible,
+.pack-tab:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
 .btn-primary {
     color: var(--accent-primary);
 }
@@ -535,6 +541,12 @@ body {
     border-bottom-color: var(--text-secondary);
 }
 
+#word-input:focus-visible {
+    border-bottom-color: var(--accent-primary);
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 4px;
+}
+
 #word-input.correct {
     border-bottom-color: var(--feedback-correct);
     color: var(--feedback-correct);
@@ -550,6 +562,18 @@ body {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #word-input.incorrect {
+        animation: none;
+    }
+
+    .btn,
+    .pack-tab,
+    #word-input {
+        transition: none;
+    }
 }
 
 .input-feedback {

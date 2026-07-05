@@ -169,7 +169,7 @@ qianshu-word-leaner/
 │   └── superpowers/        # 产品规划与规格
 ├── test/
 │   ├── feed-builder.test.js   # Feed V2 回归测试
-│   ├── data-loader.test.js    # 词库路径回归测试
+│   ├── data-loader.test.js    # 词库路径、CSV 解析与释义匹配回归测试
 │   ├── memory.test.js         # 艾宾浩斯记忆引擎回归测试
 │   ├── pronunciation.test.js  # 发音 URL 与配置回归测试
 │   ├── typing-game.test.js    # 会话统计与学习卡 HTML 回归测试

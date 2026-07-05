@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>千树背单词</title>
-    <link rel="stylesheet" href="css/style.css?v=20260705b">
+    <link rel="stylesheet" href="css/style.css?v=20260705c">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body onload="loadDefaultWordPack()">
@@ -14,7 +14,7 @@
                 <i data-lucide="book-open"></i>
                 <span>千树背单词</span>
             </div>
-            <button id="theme-toggle" class="btn btn-icon btn-ghost" onclick="toggleTheme()" title="切换主题">
+            <button id="theme-toggle" class="btn btn-icon btn-ghost" onclick="toggleTheme()" title="切换主题" aria-label="切换到深色模式">
                 <span id="theme-icon-container"><i data-lucide="moon"></i></span>
             </button>
         </header>
@@ -70,9 +70,9 @@
         </div>
 
         <!-- 加载中提示 -->
-        <div id="loading-section" class="section hidden">
+        <div id="loading-section" class="section hidden" role="status" aria-live="polite" aria-busy="true">
             <div class="loading">
-                <div class="spinner"></div>
+                <div class="spinner" aria-hidden="true"></div>
                 <p>正在加载单词数据...</p>
             </div>
         </div>
@@ -124,10 +124,10 @@
                 <button id="peek-answer-btn" class="btn btn-secondary" onclick="toggleAlwaysShowAnswer()" onmouseenter="peekAnswer()" onmouseleave="hidePeekAnswer()" title="悬停即可查看答案，点击开启常显模式">显示答案</button>
                 <button id="end-challenge-button" class="btn btn-warning hidden" onclick="endChallenge()">结束练习</button>
                 <button class="btn btn-warning" onclick="backToSource()">返回首页</button>
-                <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关">
+                <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关" aria-label="关闭发音" aria-pressed="true">
                     <span id="pronunciation-icon-container"><i data-lucide="audio-lines"></i></span>
                 </button>
-                <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关">
+                <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关" aria-label="关闭音效" aria-pressed="true">
                     <span id="sound-icon-container"><i data-lucide="volume-2"></i></span>
                 </button>
             </div>
@@ -197,6 +197,6 @@
     <script src="js/data-loader.js?v=20260705"></script>
     <script src="js/sound-effects.js?v=20260705"></script>
     <script src="js/pronunciation.js?v=20260705"></script>
-    <script src="js/typing-game.js?v=20260705d"></script>
+    <script src="js/typing-game.js?v=20260705e"></script>
 </body>
 </html>

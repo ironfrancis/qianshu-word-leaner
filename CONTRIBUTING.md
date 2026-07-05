@@ -84,7 +84,7 @@ npm test
 当前覆盖：
 
 - `test/feed-builder.test.js` — Feed V2 动态配比、错题上限、近期排除、新词游标
-- `test/data-loader.test.js` — 词库 `fetch` 路径必须使用相对站点根的 `data/`，防止 GitHub Pages 子路径部署 404（见 #1）
+- `test/data-loader.test.js` — 词库 `fetch` 路径、`parseCSVLine` 引号内逗号、`getMeaning` 大小写匹配
 - `test/memory.test.js` — 艾宾浩斯 stage 升降、到期判定、状态分类、旧数据迁移
 - `test/pronunciation.test.js` — 有道发音 URL 生成、美/英音切换、音量 clamp
 - `test/typing-game.test.js` — 会话空统计结构、挑战模式批次数、学习卡 HTML 生成
