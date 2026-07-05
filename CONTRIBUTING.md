@@ -87,8 +87,9 @@ npm test
 - `test/data-loader.test.js` — 词库 `fetch` 路径必须使用相对站点根的 `data/`，防止 GitHub Pages 子路径部署 404（见 #1）
 - `test/memory.test.js` — 艾宾浩斯 stage 升降、到期判定、状态分类、旧数据迁移
 - `test/pronunciation.test.js` — 有道发音 URL 生成、美/英音切换、音量 clamp
+- `test/typing-game.test.js` — 会话空统计结构、挑战模式批次数、学习卡 HTML 生成
 
-修改 `js/feed-builder.js`、`js/data-loader.js`、`js/memory.js` 或 `js/pronunciation.js` 后，请先运行 `npm test`。
+修改 `js/feed-builder.js`、`js/data-loader.js`、`js/memory.js`、`js/pronunciation.js` 或 `js/typing-game.js` 后，请先运行 `npm test`。
 
 ### 手动测试
 

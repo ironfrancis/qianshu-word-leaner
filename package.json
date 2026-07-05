@@ -9,11 +9,12 @@
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android",
     "start": "npx serve .",
-    "test": "npm run test:feed && npm run test:data-loader && npm run test:memory && npm run test:pronunciation",
+    "test": "npm run test:feed && npm run test:data-loader && npm run test:memory && npm run test:pronunciation && npm run test:typing-game",
     "test:feed": "node test/feed-builder.test.js",
     "test:data-loader": "node test/data-loader.test.js",
     "test:memory": "node test/memory.test.js",
-    "test:pronunciation": "node test/pronunciation.test.js"
+    "test:pronunciation": "node test/pronunciation.test.js",
+    "test:typing-game": "node test/typing-game.test.js"
   },
   "keywords": [
     "english-learning",
