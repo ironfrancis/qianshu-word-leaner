@@ -473,6 +473,8 @@ function updatePeekToggleUI() {
     btn.classList.toggle('btn-toggle-active', alwaysShowAnswer);
     btn.textContent = alwaysShowAnswer ? '答案常显' : '显示答案';
     btn.title = alwaysShowAnswer ? '常显模式已开启，点击关闭' : '悬停即可查看答案，点击开启常显模式';
+    btn.setAttribute('aria-pressed', alwaysShowAnswer ? 'true' : 'false');
+    btn.setAttribute('aria-label', alwaysShowAnswer ? '关闭答案常显模式' : '显示答案');
 }
 
 /**
@@ -543,26 +545,88 @@ function updateInputFeedback() {
 }
 
 /**
+ * 格式化练习进度文本
+ */
+function formatSessionProgress({ sessionType, batchIndex, practiceIndex, total, sessionTotal }) {
+    if (sessionType === 'challenge') {
+        return `第 ${batchIndex} 批 · ${practiceIndex}/${total} · 累计 ${sessionTotal} 词`;
+    }
+    return `${practiceIndex}/${total}`;
+}
+
+/**
+ * 格式化正确率文本（无答题时返回 "-"，避免出现 "-%"）
+ */
+function formatSessionAccuracy({ correct, total }) {
+    if (total <= 0) return '-';
+    return `${Math.round((correct / total) * 100)}%`;
+}
+
+/**
+ * 计算进度条百分比
+ */
+function computeProgressPercent(practiceIndex, total) {
+    if (total <= 0) return 0;
+    return (practiceIndex / total) * 100;
+}
+
+/**
+ * 生成供屏幕阅读器播报的统计摘要
+ */
+function buildStatsLiveSummary({ sessionType, batchIndex, practiceIndex, total, sessionStats }) {
+    const progress = formatSessionProgress({
+        sessionType,
+        batchIndex,
+        practiceIndex,
+        total,
+        sessionTotal: sessionStats.total
+    });
+    const accuracy = formatSessionAccuracy({
+        correct: sessionStats.correct,
+        total: sessionStats.total
+    });
+    return `进度 ${progress}，正确率 ${accuracy}，连续正确 ${sessionStats.streak}`;
+}
+
+/**
  * 更新统计信息
  */
 function updateStats() {
     const total = practiceQueue.length || SESSION_SIZE;
-    const accuracy = sessionStats.total > 0
-        ? Math.round((sessionStats.correct / sessionStats.total) * 100)
-        : '-';
+    const progressText = formatSessionProgress({
+        sessionType,
+        batchIndex,
+        practiceIndex,
+        total,
+        sessionTotal: sessionStats.total
+    });
+    const accuracyText = formatSessionAccuracy({
+        correct: sessionStats.correct,
+        total: sessionStats.total
+    });
 
-    if (sessionType === 'challenge') {
-        document.getElementById('progress-text').textContent =
-            `第 ${batchIndex} 批 · ${practiceIndex}/${total} · 累计 ${sessionStats.total} 词`;
-    } else {
-        document.getElementById('progress-text').textContent = `${practiceIndex}/${total}`;
-    }
-
-    document.getElementById('accuracy-text').textContent = `${accuracy}%`;
+    document.getElementById('progress-text').textContent = progressText;
+    document.getElementById('accuracy-text').textContent = accuracyText;
     document.getElementById('streak-text').textContent = sessionStats.streak;
 
-    const progressPercent = total > 0 ? (practiceIndex / total) * 100 : 0;
+    const progressPercent = computeProgressPercent(practiceIndex, total);
     document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+
+    const progressBar = document.querySelector('.progress-bar[role="progressbar"]');
+    if (progressBar) {
+        progressBar.setAttribute('aria-valuenow', String(Math.round(progressPercent)));
+    }
+
+    const liveEl = document.getElementById('stats-live');
+    if (liveEl) {
+        liveEl.textContent = buildStatsLiveSummary({
+            sessionType,
+            batchIndex,
+            practiceIndex,
+            total,
+            sessionStats
+        });
+    }
 }
 
 /**

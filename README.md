@@ -172,7 +172,7 @@ qianshu-word-leaner/
 │   ├── data-loader.test.js    # 词库路径、CSV 解析与释义匹配回归测试
 │   ├── memory.test.js         # 艾宾浩斯记忆引擎回归测试
 │   ├── pronunciation.test.js  # 发音 URL 与配置回归测试
-│   ├── typing-game.test.js    # 会话统计与学习卡 HTML 回归测试
+│   ├── typing-game.test.js    # 会话统计格式化、学习卡 HTML 与 live 摘要回归测试
 │   └── sound-effects.test.js  # 音效开关与音量 clamp 回归测试
 ├── capacitor.config.json   # Capacitor 移动端配置
 ├── package.json            # npm 依赖与脚本

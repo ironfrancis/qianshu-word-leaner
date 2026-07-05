@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>千树背单词</title>
-    <link rel="stylesheet" href="css/style.css?v=20260705c">
+    <link rel="stylesheet" href="css/style.css?v=20260705d">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body onload="loadDefaultWordPack()">
@@ -80,11 +80,11 @@
         <!-- 练习区域 -->
         <div id="practice-section" class="section hidden">
             <!-- 统计信息 -->
-            <div class="stats">
+            <div class="stats" role="region" aria-label="练习统计">
                 <div class="stat-item">
                     <span class="stat-label">进度:</span>
                     <span id="progress-text">0/0</span>
-                    <div class="progress-bar">
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="练习进度">
                         <div id="progress-fill" class="progress-fill"></div>
                     </div>
                 </div>
@@ -97,14 +97,16 @@
                     <span id="streak-text">0</span>
                 </div>
             </div>
+            <div id="stats-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
             <!-- 单词显示区 -->
             <div class="word-display">
-                <div class="chinese-word" id="chinese-word">加载中...</div>
+                <div class="chinese-word" id="chinese-word" aria-live="polite">加载中...</div>
             </div>
 
             <!-- 输入区域 -->
             <div class="input-area">
+                <label for="word-input" class="sr-only">输入英文单词</label>
                 <input
                     type="text"
                     id="word-input"
@@ -113,15 +115,16 @@
                     autocapitalize="off"
                     autocorrect="off"
                     spellcheck="false"
+                    aria-describedby="input-feedback"
                     oninput="checkInput()"
                     onkeydown="handleKeydown(event)"
                 >
-                <div id="input-feedback" class="input-feedback"></div>
+                <div id="input-feedback" class="input-feedback" aria-live="polite"></div>
             </div>
 
             <!-- 控制按钮 -->
             <div class="control-buttons">
-                <button id="peek-answer-btn" class="btn btn-secondary" onclick="toggleAlwaysShowAnswer()" onmouseenter="peekAnswer()" onmouseleave="hidePeekAnswer()" title="悬停即可查看答案，点击开启常显模式">显示答案</button>
+                <button id="peek-answer-btn" class="btn btn-secondary" onclick="toggleAlwaysShowAnswer()" onmouseenter="peekAnswer()" onmouseleave="hidePeekAnswer()" title="悬停即可查看答案，点击开启常显模式" aria-label="显示答案" aria-pressed="false">显示答案</button>
                 <button id="end-challenge-button" class="btn btn-warning hidden" onclick="endChallenge()">结束练习</button>
                 <button class="btn btn-warning" onclick="backToSource()">返回首页</button>
                 <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关" aria-label="关闭发音" aria-pressed="true">
@@ -197,6 +200,6 @@
     <script src="js/data-loader.js?v=20260705"></script>
     <script src="js/sound-effects.js?v=20260705"></script>
     <script src="js/pronunciation.js?v=20260705"></script>
-    <script src="js/typing-game.js?v=20260705e"></script>
+    <script src="js/typing-game.js?v=20260705f"></script>
 </body>
 </html>

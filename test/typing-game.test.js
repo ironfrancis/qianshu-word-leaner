@@ -143,7 +143,11 @@ function loadTypingGameHelpers() {
     return {
         createEmptySessionStats: context.createEmptySessionStats,
         getSessionBatchCount: context.getSessionBatchCount,
-        buildLearningCardHTML: context.buildLearningCardHTML
+        buildLearningCardHTML: context.buildLearningCardHTML,
+        formatSessionProgress: context.formatSessionProgress,
+        formatSessionAccuracy: context.formatSessionAccuracy,
+        computeProgressPercent: context.computeProgressPercent,
+        buildStatsLiveSummary: context.buildStatsLiveSummary
     };
 }
 
@@ -226,13 +230,87 @@ function testBuildLearningCardHTMLIncludesContinueButtonWhenRequested() {
     assert.match(html, /我学会了，继续练习/);
 }
 
+function testFormatSessionProgressQuickMode() {
+    const { formatSessionProgress } = loadTypingGameHelpers();
+
+    assert.strictEqual(
+        formatSessionProgress({
+            sessionType: 'quick',
+            batchIndex: 1,
+            practiceIndex: 3,
+            total: 20,
+            sessionTotal: 5
+        }),
+        '3/20'
+    );
+}
+
+function testFormatSessionProgressChallengeMode() {
+    const { formatSessionProgress } = loadTypingGameHelpers();
+
+    assert.strictEqual(
+        formatSessionProgress({
+            sessionType: 'challenge',
+            batchIndex: 2,
+            practiceIndex: 7,
+            total: 20,
+            sessionTotal: 27
+        }),
+        '第 2 批 · 7/20 · 累计 27 词'
+    );
+}
+
+function testFormatSessionAccuracyReturnsDashWhenEmpty() {
+    const { formatSessionAccuracy } = loadTypingGameHelpers();
+
+    assert.strictEqual(formatSessionAccuracy({ correct: 0, total: 0 }), '-');
+}
+
+function testFormatSessionAccuracyRoundsPercent() {
+    const { formatSessionAccuracy } = loadTypingGameHelpers();
+
+    assert.strictEqual(formatSessionAccuracy({ correct: 2, total: 3 }), '67%');
+}
+
+function testComputeProgressPercentHandlesZeroTotal() {
+    const { computeProgressPercent } = loadTypingGameHelpers();
+
+    assert.strictEqual(computeProgressPercent(0, 0), 0);
+}
+
+function testBuildStatsLiveSummaryIncludesAllFields() {
+    const { buildStatsLiveSummary } = loadTypingGameHelpers();
+
+    const summary = buildStatsLiveSummary({
+        sessionType: 'quick',
+        batchIndex: 1,
+        practiceIndex: 4,
+        total: 20,
+        sessionStats: {
+            total: 3,
+            correct: 2,
+            streak: 2
+        }
+    });
+
+    assert.match(summary, /进度 4\/20/);
+    assert.match(summary, /正确率 67%/);
+    assert.match(summary, /连续正确 2/);
+}
+
 const tests = [
     testCreateEmptySessionStatsShape,
     testGetSessionBatchCountReturnsZeroWhenNoPractice,
     testGetSessionBatchCountUsesPreviousBatchWhenQueueEmpty,
     testGetSessionBatchCountReturnsCurrentBatchWhileActive,
     testBuildLearningCardHTMLIncludesWordPair,
-    testBuildLearningCardHTMLIncludesContinueButtonWhenRequested
+    testBuildLearningCardHTMLIncludesContinueButtonWhenRequested,
+    testFormatSessionProgressQuickMode,
+    testFormatSessionProgressChallengeMode,
+    testFormatSessionAccuracyReturnsDashWhenEmpty,
+    testFormatSessionAccuracyRoundsPercent,
+    testComputeProgressPercentHandlesZeroTotal,
+    testBuildStatsLiveSummaryIncludesAllFields
 ];
 
 let passed = 0;
