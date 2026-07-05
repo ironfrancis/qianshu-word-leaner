@@ -84,6 +84,17 @@ function getMasteredScore(word) {
     return Math.max(0.1, 2 + Math.min(6, daysSincePractice / 7) - accuracy * 2 - getRecencyPenalty(word));
 }
 
+function isNewWord(word) {
+    return memoryManager.getWord(word).totalAttempts === 0;
+}
+
+function advanceNewWordCursorForQueue(queue) {
+    const newWordCount = queue.filter(isNewWord).length;
+    if (newWordCount > 0) {
+        memoryManager.advanceNewWordCursor(newWordCount);
+    }
+}
+
 function uniqueWords(words) {
     return [...new Set(words)];
 }
@@ -220,10 +231,6 @@ function pickNewWords(wordList, count, seen, selected, excludeCount) {
         result.push(word);
     }
 
-    if (result.length > 0) {
-        memoryManager.advanceNewWordCursor(result.length);
-    }
-
     return result;
 }
 
@@ -249,7 +256,7 @@ function interleaveReviewAndNew(reviewWords, newWords, limit) {
     return result.slice(0, limit);
 }
 
-function buildSessionQueueWithExclude(wordList, { limit = SESSION_SIZE, seen = new Set(), excludeCount = 30 } = {}) {
+function buildSessionQueueWithExclude(wordList, { limit = SESSION_SIZE, seen = new Set(), excludeCount = 30, advanceNewCursor = true } = {}) {
     const selected = new Set(seen);
     const { review: reviewTarget, new: newTarget } = getSessionTargets(wordList, seen, excludeCount);
 
@@ -262,11 +269,30 @@ function buildSessionQueueWithExclude(wordList, { limit = SESSION_SIZE, seen = n
     let queue = interleaveReviewAndNew(reviewWords, newWords, limit);
 
     if (queue.length >= limit) {
-        return uniqueWords(queue).slice(0, limit);
+        const finalQueue = uniqueWords(queue).slice(0, limit);
+        if (advanceNewCursor) {
+            advanceNewWordCursorForQueue(finalQueue);
+        }
+        return finalQueue;
     }
 
+    const mistakeSet = new Set(filterCandidates(memoryManager.getMistakeWords(wordList, seen), seen, excludeCount));
+    const mistakeCap = Math.ceil(reviewTarget * MISTAKE_REVIEW_RATIO);
+    const selectedMistakeCount = queue.filter(word => mistakeSet.has(word)).length;
+    const remainingMistakeSlots = Math.max(0, mistakeCap - selectedMistakeCount);
+    const remainingDueWords = filterCandidates(memoryManager.getDueReviewWords(wordList, seen), seen, excludeCount)
+        .filter(word => !selected.has(word));
+    const remainingDueMistakes = remainingDueWords.filter(word => mistakeSet.has(word));
+    const remainingDueRegular = remainingDueWords.filter(word => !mistakeSet.has(word));
+    const allowedDueMistakes = sampleWords(
+        remainingDueMistakes,
+        remainingMistakeSlots,
+        word => getReviewScore(word)
+    );
+
     const remainingCandidates = [
-        ...filterCandidates(memoryManager.getDueReviewWords(wordList, seen), seen, excludeCount),
+        ...remainingDueRegular,
+        ...allowedDueMistakes,
         ...filterCandidates(memoryManager.getNewWords(wordList, seen), seen, excludeCount)
     ].filter(word => !selected.has(word));
 
@@ -297,13 +323,18 @@ function buildSessionQueueWithExclude(wordList, { limit = SESSION_SIZE, seen = n
         queue = uniqueWords([...queue, ...masteredFillers]).slice(0, limit);
     }
 
+    if (advanceNewCursor) {
+        advanceNewWordCursorForQueue(queue);
+    }
+
     return queue;
 }
 
 function buildSessionQueue(wordList, options = {}) {
     for (const excludeCount of EXCLUDE_RELAX_STEPS) {
-        const queue = buildSessionQueueWithExclude(wordList, { ...options, excludeCount });
+        const queue = buildSessionQueueWithExclude(wordList, { ...options, excludeCount, advanceNewCursor: false });
         if (queue.length >= (options.limit || SESSION_SIZE) || excludeCount === 0) {
+            advanceNewWordCursorForQueue(queue);
             return queue;
         }
     }

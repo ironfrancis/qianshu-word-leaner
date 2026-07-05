@@ -108,10 +108,10 @@ function testHighReviewPressureReducesNewWords() {
     const dueWords = Array.from({ length: 18 }, (_, index) => `due-${index}`);
     const newWords = Array.from({ length: 12 }, (_, index) => `new-${index}`);
     const records = Object.fromEntries(dueWords.map(word => [word, dueRecord({
-        stage: 0,
-        correctCount: 0,
-        errorCount: 3,
-        totalAttempts: 3,
+        stage: 3,
+        correctCount: 3,
+        errorCount: 1,
+        totalAttempts: 4,
         nextReviewTime: fixedNow - 12 * 60 * 60 * 1000
     })]));
     const memoryManager = createMemoryManager({ records });
@@ -175,6 +175,37 @@ function testMistakesArePrioritizedButCapped() {
     assert.strictEqual(countPrefix(queue, 'new-'), 6);
 }
 
+function testMistakeCapAppliesDuringFillerSelection() {
+    const mistakeWords = Array.from({ length: 12 }, (_, index) => `mistake-${index}`);
+    const regularWords = Array.from({ length: 2 }, (_, index) => `regular-${index}`);
+    const newWords = Array.from({ length: 20 }, (_, index) => `new-${index}`);
+    const mistakeRecords = Object.fromEntries(mistakeWords.map(word => [word, dueRecord({
+        stage: 0,
+        correctCount: 0,
+        errorCount: 4,
+        totalAttempts: 4,
+        nextReviewTime: fixedNow - 12 * 60 * 60 * 1000
+    })]));
+    const regularRecords = Object.fromEntries(regularWords.map(word => [word, dueRecord({
+        stage: 3,
+        correctCount: 5,
+        errorCount: 1,
+        totalAttempts: 6,
+        nextReviewTime: fixedNow - 6 * 60 * 60 * 1000
+    })]));
+    const memoryManager = createMemoryManager({
+        records: { ...mistakeRecords, ...regularRecords }
+    });
+    const { buildSessionQueue } = loadFeedBuilder(memoryManager);
+
+    const queue = buildSessionQueue([...mistakeWords, ...regularWords, ...newWords]);
+
+    assert.strictEqual(queue.length, 20);
+    assert.strictEqual(countPrefix(queue, 'mistake-'), 6);
+    assert.strictEqual(countPrefix(queue, 'regular-'), 2);
+    assert.strictEqual(countPrefix(queue, 'new-'), 12);
+}
+
 function testRecentWordsStayExcludedWhenAlternativesExist() {
     const recentDueWords = Array.from({ length: 5 }, (_, index) => `recent-${index}`);
     const dueWords = Array.from({ length: 20 }, (_, index) => `due-${index}`);
@@ -195,6 +226,20 @@ function testRecentWordsStayExcludedWhenAlternativesExist() {
 
     assert.strictEqual(queue.length, 20);
     assert.strictEqual(countPrefix(queue, 'recent-'), 0);
+}
+
+function testNewWordCursorAdvancesOnlyForFinalRelaxedQueue() {
+    const words = Array.from({ length: 20 }, (_, index) => `new-${index}`);
+    const memoryManager = createMemoryManager({
+        recent: words.slice(0, 10)
+    });
+    const { buildSessionQueue } = loadFeedBuilder(memoryManager);
+
+    const queue = buildSessionQueue(words);
+
+    assert.strictEqual(queue.length, 20);
+    assert.deepStrictEqual(Array.from(queue), words);
+    assert.strictEqual(memoryManager.cursor, 20);
 }
 
 function testMasteredWordsOnlyFillWhenMainPoolIsShort() {
@@ -222,7 +267,9 @@ const tests = [
     testHighReviewPressureReducesNewWords,
     testLowReviewPressureAllowsMoreNewWords,
     testMistakesArePrioritizedButCapped,
+    testMistakeCapAppliesDuringFillerSelection,
     testRecentWordsStayExcludedWhenAlternativesExist,
+    testNewWordCursorAdvancesOnlyForFinalRelaxedQueue,
     testMasteredWordsOnlyFillWhenMainPoolIsShort
 ];
 
