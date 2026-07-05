@@ -85,8 +85,9 @@ npm test
 
 - `test/feed-builder.test.js` — Feed V2 动态配比、错题上限、近期排除、新词游标
 - `test/data-loader.test.js` — 词库 `fetch` 路径必须使用相对站点根的 `data/`，防止 GitHub Pages 子路径部署 404（见 #1）
+- `test/memory.test.js` — 艾宾浩斯 stage 升降、到期判定、状态分类、旧数据迁移
 
-修改 `js/feed-builder.js` 或 `js/data-loader.js` 后，请先运行 `npm test`。
+修改 `js/feed-builder.js`、`js/data-loader.js` 或 `js/memory.js` 后，请先运行 `npm test`。
 
 ### 手动测试
 

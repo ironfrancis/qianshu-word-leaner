@@ -9,9 +9,10 @@
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android",
     "start": "npx serve .",
-    "test": "npm run test:feed && npm run test:data-loader",
+    "test": "npm run test:feed && npm run test:data-loader && npm run test:memory",
     "test:feed": "node test/feed-builder.test.js",
-    "test:data-loader": "node test/data-loader.test.js"
+    "test:data-loader": "node test/data-loader.test.js",
+    "test:memory": "node test/memory.test.js"
   },
   "keywords": [
     "english-learning",
