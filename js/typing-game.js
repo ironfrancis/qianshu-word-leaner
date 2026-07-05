@@ -5,6 +5,7 @@
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     updateSoundIcon();
+    updatePronunciationIcon();
     initTheme();
     // 首次创建图标
     lucide.createIcons();
@@ -951,11 +952,17 @@ function toggleSound() {
  * 更新音效图标
  */
 function updateSoundIcon() {
+    const button = document.getElementById('sound-toggle');
     const container = document.getElementById('sound-icon-container');
     if (container) {
         const isEnabled = soundManager.isEnabled();
         container.innerHTML = `<i data-lucide="${isEnabled ? 'volume-2' : 'volume-x'}"></i>`;
         lucide.createIcons();
+    }
+    if (button) {
+        const isEnabled = soundManager.isEnabled();
+        button.setAttribute('aria-label', isEnabled ? '关闭音效' : '开启音效');
+        button.setAttribute('aria-pressed', isEnabled ? 'true' : 'false');
     }
 }
 
@@ -971,11 +978,17 @@ function togglePronunciation() {
  * 更新发音图标
  */
 function updatePronunciationIcon() {
+    const button = document.getElementById('pronunciation-toggle');
     const container = document.getElementById('pronunciation-icon-container');
     if (container) {
         const isEnabled = pronunciationManager.isEnabled();
         container.innerHTML = `<i data-lucide="${isEnabled ? 'audio-lines' : 'volume-x'}"></i>`;
         lucide.createIcons();
+    }
+    if (button) {
+        const isEnabled = pronunciationManager.isEnabled();
+        button.setAttribute('aria-label', isEnabled ? '关闭发音' : '开启发音');
+        button.setAttribute('aria-pressed', isEnabled ? 'true' : 'false');
     }
 }
 
@@ -1017,11 +1030,16 @@ function toggleTheme() {
  * 更新主题图标
  */
 function updateThemeIcon() {
+    const button = document.getElementById('theme-toggle');
     const container = document.getElementById('theme-icon-container');
     if (container) {
         const isDark = document.body.classList.contains('dark-mode');
         container.innerHTML = `<i data-lucide="${isDark ? 'sun' : 'moon'}"></i>`;
         lucide.createIcons();
+    }
+    if (button) {
+        const isDark = document.body.classList.contains('dark-mode');
+        button.setAttribute('aria-label', isDark ? '切换到浅色模式' : '切换到深色模式');
     }
 }
 
