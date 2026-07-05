@@ -100,7 +100,7 @@ function testNewUserGetsSequentialNewWords() {
     const queue = buildSessionQueue(words);
 
     assert.strictEqual(queue.length, 20);
-    assert.deepStrictEqual(queue, words.slice(0, 20));
+    assert.deepStrictEqual(Array.from(queue), words.slice(0, 20));
     assert.strictEqual(memoryManager.cursor, 20);
 }
 
