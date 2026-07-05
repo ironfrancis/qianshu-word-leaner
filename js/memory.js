@@ -26,6 +26,9 @@ const REVIEW_INTERVALS = [
 ];
 
 const STORAGE_KEY = 'english_typing_progress';
+const RECENT_PRACTICE_KEY = 'english_typing_recent_words';
+const RECENT_PRACTICE_LIMIT = 80;
+const STAGE_ZERO_COOLDOWN = REVIEW_INTERVALS[0];
 
 /**
  * 记忆管理器类
@@ -71,6 +74,7 @@ class MemoryManager {
                 meaning: null,
                 stage: 0,
                 lastReview: null,
+                lastAttemptAt: null,
                 correctCount: 0,
                 errorCount: 0,
                 totalAttempts: 0
@@ -89,6 +93,7 @@ class MemoryManager {
                 meaning: updates.meaning || null,
                 stage: 0,
                 lastReview: null,
+                lastAttemptAt: null,
                 correctCount: 0,
                 errorCount: 0,
                 totalAttempts: 0
@@ -110,6 +115,7 @@ class MemoryManager {
         const now = Date.now();
 
         record.totalAttempts++;
+        record.lastAttemptAt = now;
 
         if (correct) {
             record.correctCount++;
@@ -139,6 +145,7 @@ class MemoryManager {
         const now = Date.now();
 
         record.totalAttempts++;
+        record.lastAttemptAt = now;
 
         if (correct) {
             record.correctCount++;
@@ -166,18 +173,24 @@ class MemoryManager {
     getNextReviewTime(word) {
         const record = this.getWord(word);
 
-        if (record.stage === 0 || !record.lastReview) {
-            // 新单词或未复习过，立即复习
+        if (record.totalAttempts === 0) {
             return Date.now();
         }
 
         if (record.stage > REVIEW_INTERVALS.length) {
-            // 已掌握，不需要复习
             return Infinity;
         }
 
+        if (record.stage === 0) {
+            const anchor = record.lastAttemptAt || record.lastReview;
+            if (!anchor) {
+                return Date.now();
+            }
+            return anchor + STAGE_ZERO_COOLDOWN;
+        }
+
         const interval = REVIEW_INTERVALS[record.stage - 1];
-        return record.lastReview + interval;
+        return (record.lastReview || record.lastAttemptAt || 0) + interval;
     }
 
     /**
@@ -286,6 +299,77 @@ class MemoryManager {
             return record.totalAttempts > 0 && this.needsReview(word);
         }).length;
         return stats;
+    }
+
+    /**
+     * 获取跨 session 最近练习过的单词
+     */
+    getRecentPracticeWords() {
+        try {
+            const stored = localStorage.getItem(RECENT_PRACTICE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error('读取最近练习记录失败:', e);
+            return [];
+        }
+    }
+
+    /**
+     * 记录最近练习过的单词，用于降低短期内重复出现的概率
+     */
+    recordRecentPractice(words) {
+        if (!Array.isArray(words) || words.length === 0) return;
+
+        const merged = [...words, ...this.getRecentPracticeWords()];
+        const seen = new Set();
+        const deduped = [];
+
+        merged.forEach(word => {
+            if (seen.has(word)) return;
+            seen.add(word);
+            deduped.push(word);
+        });
+
+        try {
+            localStorage.setItem(
+                RECENT_PRACTICE_KEY,
+                JSON.stringify(deduped.slice(0, RECENT_PRACTICE_LIMIT))
+            );
+        } catch (e) {
+            console.error('保存最近练习记录失败:', e);
+        }
+    }
+
+    /**
+     * 计算 feed 选词优先级，数值越高越优先
+     */
+    getFeedPriority(word) {
+        const record = this.getWord(word);
+        const now = Date.now();
+        const recentWords = this.getRecentPracticeWords();
+        const recentIndex = recentWords.indexOf(word);
+
+        if (record.totalAttempts === 0) {
+            let score = 15;
+            if (recentIndex !== -1) {
+                score -= Math.max(8, 30 - recentIndex * 0.25);
+            }
+            return Math.max(0.1, score);
+        }
+
+        const nextReview = this.getNextReviewTime(word);
+        const overdueMinutes = Math.max(0, now - nextReview) / (60 * 1000);
+        let score = overdueMinutes;
+
+        if (record.errorCount > record.correctCount) {
+            score += Math.min(18, record.errorCount * 4);
+        }
+
+        if (recentIndex !== -1) {
+            score -= Math.max(10, 45 - recentIndex * 0.35);
+        }
+
+        return Math.max(0.1, score);
     }
 
     /**

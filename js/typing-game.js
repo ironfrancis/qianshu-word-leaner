@@ -767,6 +767,10 @@ function showComplete({ poolExhausted = false } = {}) {
     sessionEnded = true;
     clearAllTimers();
 
+    if (sessionSeen.size > 0) {
+        memoryManager.recordRecentPractice([...sessionSeen]);
+    }
+
     const stats = { ...sessionStats };
     showSection('complete-section');
 
