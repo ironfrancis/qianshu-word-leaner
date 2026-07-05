@@ -56,11 +56,20 @@ function testPackSelectorExposesKeyboardHelp() {
     );
 }
 
+function testHomeWorkspaceExposesPackSummaryRegion() {
+    assert.match(
+        html,
+        /<article class="home-workspace" role="region" aria-label="小学英语全部，共 448 词">/,
+        '首页词包工作区应暴露当前词包和总词数的区域标签'
+    );
+}
+
 function run() {
     testSessionModeActionsHaveAccessibleGroup();
     testSessionModeActionsExposeKeyboardHelp();
     testPackMetricsExposeReadableLabels();
     testPackSelectorExposesKeyboardHelp();
+    testHomeWorkspaceExposesPackSummaryRegion();
     console.log('home-a11y tests passed');
 }
 

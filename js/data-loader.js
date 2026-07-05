@@ -272,6 +272,13 @@ function buildPackMetricLabel(count, label) {
 }
 
 /**
+ * 生成首页当前词包工作区的读屏标签。
+ */
+function buildPackWorkspaceLabel(packName, totalCount) {
+    return `${packName}，共 ${totalCount} 词`;
+}
+
+/**
  * 同步首页统计卡片的读屏标签，避免数字更新后 aria-label 仍停留在初始值。
  */
 function updatePackMetricCell(counterEl, count) {
@@ -297,9 +304,13 @@ function updatePackOverview() {
     const reviewEl = document.getElementById('pack-review-count');
     const newEl = document.getElementById('pack-new-count');
     const mistakeEl = document.getElementById('pack-mistake-count');
+    const workspaceEl = document.querySelector('.home-workspace');
 
     if (titleEl && pack) titleEl.textContent = pack.name;
     if (totalEl) totalEl.textContent = stats.total;
+    if (workspaceEl && pack) {
+        workspaceEl.setAttribute('aria-label', buildPackWorkspaceLabel(pack.name, stats.total));
+    }
     if (reviewEl) {
         reviewEl.textContent = stats.dueReview;
         updatePackMetricCell(reviewEl, stats.dueReview);

@@ -36,7 +36,8 @@ function loadDataLoaderFunctions(dictionaryEntries = []) {
             getMeaning,
             resolvePackTabNavigation,
             getPackTabRovingTabindex,
-            buildPackMetricLabel: typeof buildPackMetricLabel === 'function' ? buildPackMetricLabel : undefined
+            buildPackMetricLabel: typeof buildPackMetricLabel === 'function' ? buildPackMetricLabel : undefined,
+            buildPackWorkspaceLabel: typeof buildPackWorkspaceLabel === 'function' ? buildPackWorkspaceLabel : undefined
         });`,
         context
     );
@@ -182,6 +183,21 @@ function testBuildPackMetricLabelCombinesLabelCountAndUnit() {
     assert.strictEqual(buildPackMetricLabel(0, '错题'), '错题 0 词');
 }
 
+function testBuildPackWorkspaceLabelCombinesPackNameAndTotal() {
+    const { buildPackWorkspaceLabel } = loadDataLoaderFunctions();
+
+    assert.strictEqual(typeof buildPackWorkspaceLabel, 'function', '应提供首页词包工作区可读标签生成函数');
+    assert.strictEqual(buildPackWorkspaceLabel('计算机兴趣词包', 260), '计算机兴趣词包，共 260 词');
+}
+
+function testUpdatePackOverviewSyncsWorkspaceAriaLabel() {
+    assert.match(
+        source,
+        /workspaceEl\.setAttribute\('aria-label', buildPackWorkspaceLabel\(pack\.name, stats\.total\)\)/,
+        '词包统计刷新时应同步首页工作区 aria-label'
+    );
+}
+
 const tests = [
     testFetchPathsUseSiteRootDataDirectory,
     testWordPackConfigIsPresent,
@@ -198,7 +214,9 @@ const tests = [
     testResolvePackTabNavigationSupportsHomeAndEnd,
     testResolvePackTabNavigationIgnoresUnrelatedKeys,
     testGetPackTabRovingTabindexMarksActiveTab,
-    testBuildPackMetricLabelCombinesLabelCountAndUnit
+    testBuildPackMetricLabelCombinesLabelCountAndUnit,
+    testBuildPackWorkspaceLabelCombinesPackNameAndTotal,
+    testUpdatePackOverviewSyncsWorkspaceAriaLabel
 ];
 
 for (const test of tests) {
