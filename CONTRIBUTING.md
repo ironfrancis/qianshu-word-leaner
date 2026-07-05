@@ -87,7 +87,7 @@ npm test
 - `test/data-loader.test.js` — 词库 `fetch` 路径、`parseCSVLine` 引号内逗号、`getMeaning` 大小写匹配
 - `test/memory.test.js` — 艾宾浩斯 stage 升降、到期判定、状态分类、旧数据迁移
 - `test/pronunciation.test.js` — 有道发音 URL 生成、美/英音切换、音量 clamp
-- `test/typing-game.test.js` — 会话空统计结构、挑战模式批次数、学习卡 HTML 生成
+- `test/typing-game.test.js` — 会话空统计结构、挑战模式批次数、学习卡 HTML 生成、进度/正确率格式化与 live 摘要
 - `test/sound-effects.test.js` — 音效开关 toggle、音量 clamp、禁用时跳过播放
 
 修改 `js/feed-builder.js`、`js/data-loader.js`、`js/memory.js`、`js/pronunciation.js`、`js/typing-game.js` 或 `js/sound-effects.js` 后，请先运行 `npm test`。
