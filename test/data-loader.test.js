@@ -30,7 +30,17 @@ function loadDataLoaderFunctions(dictionaryEntries = []) {
         : '';
 
     vm.createContext(context);
-    return vm.runInContext(`${source}\n${dictionarySetup}\n({ parseCSVLine, getMeaning, resolvePackTabNavigation, getPackTabRovingTabindex });`, context);
+    return vm.runInContext(
+        `${source}\n${dictionarySetup}\n({
+            parseCSVLine,
+            getMeaning,
+            resolvePackTabNavigation,
+            getPackTabRovingTabindex,
+            buildPackMetricLabel: typeof buildPackMetricLabel === 'function' ? buildPackMetricLabel : undefined,
+            buildPackWorkspaceLabel: typeof buildPackWorkspaceLabel === 'function' ? buildPackWorkspaceLabel : undefined
+        });`,
+        context
+    );
 }
 
 function testFetchPathsUseSiteRootDataDirectory() {
@@ -165,6 +175,29 @@ function testGetPackTabRovingTabindexMarksActiveTab() {
     assert.strictEqual(getPackTabRovingTabindex(1, 0), '-1');
 }
 
+function testBuildPackMetricLabelCombinesLabelCountAndUnit() {
+    const { buildPackMetricLabel } = loadDataLoaderFunctions();
+
+    assert.strictEqual(typeof buildPackMetricLabel, 'function', '应提供首页统计卡片可读标签生成函数');
+    assert.strictEqual(buildPackMetricLabel(12, '待复习'), '待复习 12 词');
+    assert.strictEqual(buildPackMetricLabel(0, '错题'), '错题 0 词');
+}
+
+function testBuildPackWorkspaceLabelCombinesPackNameAndTotal() {
+    const { buildPackWorkspaceLabel } = loadDataLoaderFunctions();
+
+    assert.strictEqual(typeof buildPackWorkspaceLabel, 'function', '应提供首页词包工作区可读标签生成函数');
+    assert.strictEqual(buildPackWorkspaceLabel('计算机兴趣词包', 260), '计算机兴趣词包，共 260 词');
+}
+
+function testUpdatePackOverviewSyncsWorkspaceAriaLabel() {
+    assert.match(
+        source,
+        /workspaceEl\.setAttribute\('aria-label', buildPackWorkspaceLabel\(pack\.name, stats\.total\)\)/,
+        '词包统计刷新时应同步首页工作区 aria-label'
+    );
+}
+
 const tests = [
     testFetchPathsUseSiteRootDataDirectory,
     testWordPackConfigIsPresent,
@@ -180,7 +213,10 @@ const tests = [
     testResolvePackTabNavigationMovesLeftWithWrap,
     testResolvePackTabNavigationSupportsHomeAndEnd,
     testResolvePackTabNavigationIgnoresUnrelatedKeys,
-    testGetPackTabRovingTabindexMarksActiveTab
+    testGetPackTabRovingTabindexMarksActiveTab,
+    testBuildPackMetricLabelCombinesLabelCountAndUnit,
+    testBuildPackWorkspaceLabelCombinesPackNameAndTotal,
+    testUpdatePackOverviewSyncsWorkspaceAriaLabel
 ];
 
 for (const test of tests) {

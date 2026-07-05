@@ -9,13 +9,14 @@
     "cap:open:android": "npx cap open android",
     "cap:run:android": "npx cap run android",
     "start": "npx serve .",
-    "test": "npm run test:feed && npm run test:data-loader && npm run test:memory && npm run test:pronunciation && npm run test:typing-game && npm run test:sound-effects",
+    "test": "npm run test:feed && npm run test:data-loader && npm run test:memory && npm run test:pronunciation && npm run test:typing-game && npm run test:sound-effects && npm run test:home-a11y",
     "test:feed": "node test/feed-builder.test.js",
     "test:data-loader": "node test/data-loader.test.js",
     "test:memory": "node test/memory.test.js",
     "test:pronunciation": "node test/pronunciation.test.js",
     "test:typing-game": "node test/typing-game.test.js",
-    "test:sound-effects": "node test/sound-effects.test.js"
+    "test:sound-effects": "node test/sound-effects.test.js",
+    "test:home-a11y": "node test/home-a11y.test.js"
   },
   "keywords": [
     "english-learning",

@@ -27,37 +27,40 @@
                 <h1 class="home-headline">看中文，打出英文</h1>
             </div>
 
-            <div class="pack-selector" role="tablist" aria-label="词包选择">
-                <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
+            <div class="pack-selector" role="tablist" aria-label="词包选择" aria-describedby="pack-selector-help">
+                <button id="pack-tab-primary" class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" aria-controls="pack-panel" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
                     小学英语
                 </button>
-                <button class="pack-tab" data-pack="computer" role="tab" aria-selected="false" tabindex="-1" onclick="switchWordPack('computer')" onkeydown="handlePackTabKeydown(event)">
+                <button id="pack-tab-computer" class="pack-tab" data-pack="computer" role="tab" aria-selected="false" aria-controls="pack-panel" tabindex="-1" onclick="switchWordPack('computer')" onkeydown="handlePackTabKeydown(event)">
                     计算机
                 </button>
             </div>
+            <p id="pack-selector-help" class="pack-help">使用 ←/→ 方向键切换词包。</p>
 
-            <article class="home-workspace">
+            <article id="pack-panel" class="home-workspace" role="tabpanel" aria-label="小学英语全部，共 448 词">
                 <header class="workspace-header">
                     <h2 id="pack-title">小学英语全部</h2>
                     <span class="workspace-meta"><span id="pack-total-count">448</span> 词</span>
                 </header>
 
                 <div class="home-metrics">
-                    <div class="metric-cell">
+                    <div class="metric-cell" role="group" data-metric-label="待复习" aria-label="待复习 0 词">
                         <span id="pack-review-count" class="metric-num">0</span>
                         <span class="metric-label">待复习</span>
                     </div>
-                    <div class="metric-cell">
+                    <div class="metric-cell" role="group" data-metric-label="新词" aria-label="新词 0 词">
                         <span id="pack-new-count" class="metric-num">0</span>
                         <span class="metric-label">新词</span>
                     </div>
-                    <div class="metric-cell">
+                    <div class="metric-cell" role="group" data-metric-label="错题" aria-label="错题 0 词">
                         <span id="pack-mistake-count" class="metric-num">0</span>
                         <span class="metric-label">错题</span>
                     </div>
                 </div>
 
-                <div class="home-actions">
+                <div class="home-actions" role="group" aria-labelledby="session-mode-heading" aria-describedby="session-mode-help">
+                    <h3 id="session-mode-heading" class="sr-only">选择练习模式</h3>
+                    <p id="session-mode-help" class="mode-help">使用 Tab 切换模式，按 Enter 或空格开始练习。</p>
                     <button class="btn btn-cta session-btn" onclick="startSession('quick')">
                         <span class="btn-label">小试牛刀</span>
                         <span class="btn-desc">20 词 · 混合练习</span>
@@ -199,7 +202,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
     <script src="js/memory.js?v=20260705d"></script>
     <script src="js/feed-builder.js?v=20260705d"></script>
-    <script src="js/data-loader.js?v=20260705g"></script>
+    <script src="js/data-loader.js?v=20260705h"></script>
     <script src="js/sound-effects.js?v=20260705"></script>
     <script src="js/pronunciation.js?v=20260705"></script>
     <script src="js/typing-game.js?v=20260705g"></script>
