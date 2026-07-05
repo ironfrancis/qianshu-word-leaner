@@ -418,7 +418,7 @@ body {
     display: flex;
     justify-content: center;
     gap: 4px;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     padding: 4px;
     background: var(--bg-paper-warm);
     border-radius: var(--radius-md);
@@ -447,6 +447,13 @@ body {
     color: var(--text-primary);
     background: var(--bg-paper-light);
     box-shadow: var(--shadow-soft);
+}
+
+.pack-help {
+    margin: 0 0 20px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-align: center;
 }
 
 /* ==================== 加载动画 ==================== */

@@ -43,10 +43,24 @@ function testPackMetricsExposeReadableLabels() {
     );
 }
 
+function testPackSelectorExposesKeyboardHelp() {
+    assert.match(
+        html,
+        /<div class="pack-selector" role="tablist" aria-label="词包选择" aria-describedby="pack-selector-help">/,
+        '词包选择器应关联键盘操作说明'
+    );
+    assert.match(
+        html,
+        /<p id="pack-selector-help" class="pack-help">使用 ←\/→ 方向键切换词包。<\/p>/,
+        '首页应说明词包 tablist 的方向键操作方式'
+    );
+}
+
 function run() {
     testSessionModeActionsHaveAccessibleGroup();
     testSessionModeActionsExposeKeyboardHelp();
     testPackMetricsExposeReadableLabels();
+    testPackSelectorExposesKeyboardHelp();
     console.log('home-a11y tests passed');
 }
 

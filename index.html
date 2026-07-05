@@ -26,7 +26,7 @@
                 <h1 class="home-headline">看中文，打出英文</h1>
             </div>
 
-            <div class="pack-selector" role="tablist" aria-label="词包选择">
+            <div class="pack-selector" role="tablist" aria-label="词包选择" aria-describedby="pack-selector-help">
                 <button class="pack-tab active" data-pack="primary" role="tab" aria-selected="true" tabindex="0" onclick="switchWordPack('primary')" onkeydown="handlePackTabKeydown(event)">
                     小学英语
                 </button>
@@ -34,6 +34,7 @@
                     计算机
                 </button>
             </div>
+            <p id="pack-selector-help" class="pack-help">使用 ←/→ 方向键切换词包。</p>
 
             <article class="home-workspace">
                 <header class="workspace-header">
