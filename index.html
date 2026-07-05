@@ -119,11 +119,12 @@
             </div>
         </div>
 
-        <!-- 完成界面 -->
+        <!-- Session 小结页 -->
         <div id="complete-section" class="section hidden">
             <div class="complete-message">
-                <h2><i data-lucide="party-popper"></i> 太棒了！</h2>
+                <h2 id="complete-title">本轮完成！</h2>
                 <p id="complete-text">本轮练习完成！</p>
+                <p id="complete-batch-info" class="complete-subtitle hidden"></p>
                 <div class="complete-stats">
                     <div class="stat">
                         <span class="stat-value" id="complete-total">0</span>
@@ -136,6 +137,20 @@
                     <div class="stat">
                         <span class="stat-value" id="complete-accuracy">0%</span>
                         <span class="stat-name">正确率</span>
+                    </div>
+                </div>
+                <div class="complete-word-breakdown">
+                    <div class="breakdown-item">
+                        <span class="breakdown-value" id="complete-new">0</span>
+                        <span class="breakdown-label">新词</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-value" id="complete-review">0</span>
+                        <span class="breakdown-label">复习</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-value" id="complete-mistake">0</span>
+                        <span class="breakdown-label">错题</span>
                     </div>
                 </div>
                 <div class="complete-actions">

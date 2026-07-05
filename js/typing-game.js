@@ -18,6 +18,7 @@ let practiceQueue = [];
 let practiceIndex = 0;
 let sessionSeen = new Set();
 let batchIndex = 1;
+let currentBatchSize = 0;
 let sessionStats = {
     total: 0,
     correct: 0,
@@ -118,13 +119,14 @@ function loadSessionBatch() {
     const wordList = getCurrentWordList().map(item => item.word);
     practiceQueue = buildSessionQueue(wordList, { limit: SESSION_SIZE, seen: sessionSeen });
     practiceIndex = 0;
+    currentBatchSize = practiceQueue.length;
 
     practiceQueue.forEach(word => {
         sessionSeen.add(word);
     });
 
     if (practiceQueue.length === 0) {
-        showComplete();
+        showComplete({ poolExhausted: sessionStats.total > 0 });
         return;
     }
 
@@ -711,9 +713,22 @@ function endChallenge() {
 }
 
 /**
- * 显示完成界面
+ * 计算本次 session 涉及的批次数
  */
-function showComplete() {
+function getSessionBatchCount() {
+    if (sessionStats.total === 0) return 0;
+    if (practiceQueue.length === 0 && practiceIndex === 0 && batchIndex > 1) {
+        return batchIndex - 1;
+    }
+    return batchIndex;
+}
+
+/**
+ * 显示 Session 小结页
+ * @param {object} options
+ * @param {boolean} options.poolExhausted - 词池是否已耗尽
+ */
+function showComplete({ poolExhausted = false } = {}) {
     clearAllTimers();
     showSection('complete-section');
 
@@ -721,14 +736,32 @@ function showComplete() {
         ? Math.round((sessionStats.correct / sessionStats.total) * 100)
         : 0;
 
-    document.querySelector('#complete-section h2').textContent =
+    document.getElementById('complete-title').textContent =
         sessionType === 'challenge' ? '挑战结束！' : '本轮完成！';
     document.getElementById('complete-total').textContent = sessionStats.total;
     document.getElementById('complete-correct').textContent = sessionStats.correct;
     document.getElementById('complete-accuracy').textContent = `${accuracy}%`;
+    document.getElementById('complete-new').textContent = sessionStats.newWords;
+    document.getElementById('complete-review').textContent = sessionStats.reviewWords;
+    document.getElementById('complete-mistake').textContent = sessionStats.mistakeWords;
 
-    let message = '完成！';
-    if (sessionStats.total === 0) {
+    const batchInfoEl = document.getElementById('complete-batch-info');
+    if (sessionType === 'challenge' && sessionStats.total > 0) {
+        const batches = getSessionBatchCount();
+        batchInfoEl.textContent = `共练习 ${batches} 批 · 累计 ${sessionStats.total} 词`;
+        batchInfoEl.classList.remove('hidden');
+    } else if (sessionType === 'quick' && currentBatchSize > 0 && currentBatchSize < SESSION_SIZE) {
+        batchInfoEl.textContent = `本批 ${currentBatchSize} 词`;
+        batchInfoEl.classList.remove('hidden');
+    } else {
+        batchInfoEl.classList.add('hidden');
+        batchInfoEl.textContent = '';
+    }
+
+    let message;
+    if (poolExhausted) {
+        message = '太棒了，暂无更多待练单词！<i data-lucide="party-popper" class="icon-inline"></i>';
+    } else if (sessionStats.total === 0) {
         message = '本次还没有练习单词';
     } else if (accuracy >= 90) {
         message = '太棒了！你的正确率很高！<i data-lucide="party-popper" class="icon-inline"></i>';
