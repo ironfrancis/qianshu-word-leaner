@@ -261,6 +261,13 @@ body {
     gap: 10px;
 }
 
+.mode-help {
+    margin: 0 0 2px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    text-align: center;
+}
+
 /* ==================== 区块样式 ==================== */
 .section {
     padding: 30px 0;
