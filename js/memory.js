@@ -28,6 +28,8 @@ const REVIEW_INTERVALS = [
 const STORAGE_KEY = 'english_typing_progress';
 const RECENT_PRACTICE_KEY = 'english_typing_recent_words';
 const RECENT_PRACTICE_LIMIT = 80;
+const RECENT_EXCLUDE_COUNT = 30;
+const NEW_WORD_CURSOR_KEY = 'english_typing_new_cursor';
 const STAGE_ZERO_COOLDOWN = REVIEW_INTERVALS[0];
 
 /**
@@ -45,12 +47,37 @@ class MemoryManager {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
-                return JSON.parse(stored);
+                const data = JSON.parse(stored);
+                this.migrateLegacyRecords(data);
+                return data;
             }
         } catch (e) {
             console.error('加载学习数据失败:', e);
         }
         return {};
+    }
+
+    /**
+     * 兼容旧数据：补齐 lastAttemptAt，避免大量单词被判定为立即到期
+     */
+    migrateLegacyRecords(data) {
+        const now = Date.now();
+        let changed = false;
+
+        Object.values(data).forEach(record => {
+            if (record.totalAttempts > 0 && !record.lastAttemptAt) {
+                record.lastAttemptAt = record.lastReview || now;
+                changed = true;
+            }
+        });
+
+        if (changed) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                console.error('迁移学习数据失败:', e);
+            }
+        }
     }
 
     /**
@@ -341,9 +368,39 @@ class MemoryManager {
     }
 
     /**
+     * 判断单词是否处于「近期已练」硬排除窗口
+     */
+    isRecentlyExcluded(word, excludeCount = RECENT_EXCLUDE_COUNT) {
+        const recentWords = this.getRecentPracticeWords();
+        const recentIndex = recentWords.indexOf(word);
+        return recentIndex !== -1 && recentIndex < excludeCount;
+    }
+
+    /**
+     * 获取新词顺序游标，保证每轮推进不同的新词
+     */
+    getNewWordCursor() {
+        return parseInt(localStorage.getItem(NEW_WORD_CURSOR_KEY) || '0', 10) || 0;
+    }
+
+    advanceNewWordCursor(step) {
+        if (step <= 0) return;
+        const next = this.getNewWordCursor() + step;
+        try {
+            localStorage.setItem(NEW_WORD_CURSOR_KEY, String(next));
+        } catch (e) {
+            console.error('保存新词游标失败:', e);
+        }
+    }
+
+    /**
      * 计算 feed 选词优先级，数值越高越优先
      */
     getFeedPriority(word) {
+        if (this.isRecentlyExcluded(word)) {
+            return 0;
+        }
+
         const record = this.getWord(word);
         const now = Date.now();
         const recentWords = this.getRecentPracticeWords();

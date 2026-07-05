@@ -17,6 +17,7 @@ let currentWord = null;
 let practiceQueue = [];
 let practiceIndex = 0;
 let sessionSeen = new Set();
+let sessionPracticed = new Set();
 let batchIndex = 1;
 let currentBatchSize = 0;
 let sessionEnded = false;
@@ -97,6 +98,11 @@ function createEmptySessionStats() {
     };
 }
 
+function persistSessionPractice() {
+    if (sessionPracticed.size === 0) return;
+    memoryManager.recordRecentPractice([...sessionPracticed]);
+}
+
 /**
  * 开始练习 session
  */
@@ -106,6 +112,7 @@ function startSession(type) {
     practiceQueue = [];
     practiceIndex = 0;
     sessionSeen = new Set();
+    sessionPracticed = new Set();
     batchIndex = 1;
     sessionEnded = false;
     sessionStats = createEmptySessionStats();
@@ -680,6 +687,7 @@ function recordWordCategory() {
 function recordAnswer(correct, usedHint = false) {
     if (!currentWord || sessionEnded) return;
 
+    sessionPracticed.add(currentWord);
     sessionStats.total++;
     recordWordCategory();
     if (correct) {
@@ -767,8 +775,8 @@ function showComplete({ poolExhausted = false } = {}) {
     sessionEnded = true;
     clearAllTimers();
 
-    if (sessionSeen.size > 0) {
-        memoryManager.recordRecentPractice([...sessionSeen]);
+    if (sessionPracticed.size > 0) {
+        persistSessionPractice();
     }
 
     const stats = { ...sessionStats };
@@ -830,6 +838,7 @@ function showComplete({ poolExhausted = false } = {}) {
 function backToSource() {
     sessionEnded = true;
     clearAllTimers();
+    persistSessionPractice();
     alwaysShowAnswer = false;
     isAnswerLocked = false;
     updatePeekToggleUI();
