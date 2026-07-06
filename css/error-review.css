@@ -1,0 +1,107 @@
+/* ==================== 错题回顾样式 ==================== */
+
+.error-review-section {
+    margin: 24px 0 0;
+    padding: 20px 16px;
+    background: var(--bg-paper-warm);
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--accent-error);
+}
+
+.error-review-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent-error);
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.error-review-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.error-review-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.error-review-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: var(--bg-paper-light);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.error-review-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 118, 117, 0.12);
+}
+
+.error-review-item:last-child {
+    margin-bottom: 0;
+}
+
+.error-review-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--accent-error);
+    background: rgba(255, 118, 117, 0.12);
+    border-radius: 50%;
+    font-family: 'Nunito', sans-serif;
+}
+
+.error-review-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.error-review-word {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+    font-family: 'Nunito', 'SF Mono', 'Consolas', monospace;
+    letter-spacing: 0.02em;
+}
+
+.error-review-meaning {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+    .error-review-section {
+        padding: 16px 10px;
+    }
+
+    .error-review-item {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .error-review-word {
+        font-size: 0.95rem;
+    }
+}
