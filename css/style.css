@@ -96,7 +96,27 @@ body.dark-mode {
     stroke-width: 2px;
 }
 
+.oil-icon {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+    object-fit: contain;
+}
+
+.icon-inline.oil-icon {
+    vertical-align: -0.2em;
+}
+
 .icon-inline {
+    vertical-align: -0.2em;
+}
+
+.site-brand .oil-icon {
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: 0.5rem;
+}
     width: 1.1em;
     height: 1.1em;
     margin-right: 4px;

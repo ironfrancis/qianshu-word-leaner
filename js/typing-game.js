@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePronunciationIcon();
     initTheme();
     // 首次创建图标
-    lucide.createIcons();
 });
 
 // 游戏状态
@@ -378,7 +377,6 @@ function mountLearningCard(word, options = {}) {
     answerDisplay.innerHTML = buildLearningCardHTML(word, options);
     answerDisplay.classList.remove('hidden');
     answerDisplay.classList.add('learning-card-area');
-    lucide.createIcons();
 
     if (options.locked) {
         isAnswerLocked = true;
@@ -410,7 +408,7 @@ function peekAnswer() {
     if (!currentWord || isAnswerLocked || alwaysShowAnswer) return;
 
     mountLearningCard(currentWord, {
-        badgeText: '<i data-lucide="lightbulb" class="icon-inline"></i> 学习提示',
+        badgeText: '<img src="assets/icons/lightbulb.png" alt="hint" class="oil-icon icon-inline" /> 学习提示',
         hintText: '想不起来就看一眼，记住后移开鼠标继续拼写'
     });
 }
@@ -431,7 +429,7 @@ function showPersistentAnswerCard() {
     if (!currentWord) return;
 
     mountLearningCard(currentWord, {
-        badgeText: '<i data-lucide="eye" class="icon-inline"></i> 常显模式',
+        badgeText: '<img src="assets/icons/eye.png" alt="eye" class="oil-icon icon-inline" /> 常显模式',
         hintText: '已开启「显示答案」常显模式，再次点击按钮可关闭'
     });
 
@@ -484,7 +482,7 @@ function showLearningCard(word) {
     clearAllTimers();
 
     mountLearningCard(word, {
-        badgeText: '<i data-lucide="lightbulb" class="icon-inline"></i> 学习提示',
+        badgeText: '<img src="assets/icons/lightbulb.png" alt="hint" class="oil-icon icon-inline" /> 学习提示',
         hintText: '这个单词需要多加练习哦',
         continueHandler: 'continueFromLearningCard()',
         continueLabel: '我学会了，继续练习',
@@ -509,7 +507,7 @@ function continueFromLearningCard() {
  */
 function showLearningMode(word) {
     mountLearningCard(word, {
-        badgeText: '<i data-lucide="book" class="icon-inline"></i> 新单词学习',
+        badgeText: '<img src="assets/icons/book.png" alt="book" class="oil-icon icon-inline" /> 新单词学习',
         hintText: '先记住这个单词，然后试着输入它',
         autoHideDelay: 3000,
         onAutoHide: () => {
@@ -709,8 +707,7 @@ function checkInput() {
         input.classList.add('correct');
         const feedback = document.getElementById('input-feedback');
         feedback.classList.add('feedback-correct');
-        feedback.innerHTML = usedHints ? '<i data-lucide="check" class="icon-inline"></i> 正确！（使用了提示）' : '<i data-lucide="check" class="icon-inline"></i> 正确！';
-        lucide.createIcons();
+        feedback.innerHTML = usedHints ? '<img src="assets/icons/check.png" alt="check" class="oil-icon icon-inline" /> 正确！（使用了提示）' : '<img src="assets/icons/check.png" alt="check" class="oil-icon icon-inline" /> 正确！';
 
         // 播放正确音效
         soundManager.playCorrect();
@@ -861,13 +858,13 @@ function buildCompleteMessage({ poolExhausted, stats, accuracy }) {
  */
 function decorateCompleteMessageHTML(message) {
     if (message.includes('暂无更多待练单词') || message.includes('正确率很高')) {
-        return `${message}<i data-lucide="party-popper" class="icon-inline"></i>`;
+        return `${message}<img src="assets/icons/party-popper.png" alt="celebrate" class="oil-icon icon-inline" />`;
     }
     if (message.includes('继续加油')) {
-        return `${message}<i data-lucide="award" class="icon-inline"></i>`;
+        return `${message}<img src="assets/icons/award.png" alt="award" class="oil-icon icon-inline" />`;
     }
     if (message.includes('多加练习')) {
-        return `${message} <i data-lucide="book-open" class="icon-inline"></i>`;
+        return `${message} <img src="assets/icons/book-open.png" alt="study" class="oil-icon icon-inline" />`;
     }
     return message;
 }
@@ -964,7 +961,6 @@ function showComplete({ poolExhausted = false } = {}) {
         });
     }
 
-    lucide.createIcons();
     updatePackOverview();
 }
 
@@ -1085,8 +1081,7 @@ function updateSoundIcon() {
     const container = document.getElementById('sound-icon-container');
     if (container) {
         const isEnabled = soundManager.isEnabled();
-        container.innerHTML = `<i data-lucide="${isEnabled ? 'volume-2' : 'volume-x'}"></i>`;
-        lucide.createIcons();
+        container.innerHTML = `<img src="assets/icons/${isEnabled ? 'volume-2' : 'volume-x'}.png" alt="sound" class="oil-icon" />`;
     }
     if (button) {
         const isEnabled = soundManager.isEnabled();
@@ -1111,8 +1106,7 @@ function updatePronunciationIcon() {
     const container = document.getElementById('pronunciation-icon-container');
     if (container) {
         const isEnabled = pronunciationManager.isEnabled();
-        container.innerHTML = `<i data-lucide="${isEnabled ? 'audio-lines' : 'volume-x'}"></i>`;
-        lucide.createIcons();
+        container.innerHTML = `<img src="assets/icons/${isEnabled ? 'audio-lines' : 'volume-x'}.png" alt="audio" class="oil-icon" />`;
     }
     if (button) {
         const isEnabled = pronunciationManager.isEnabled();
@@ -1163,8 +1157,7 @@ function updateThemeIcon() {
     const container = document.getElementById('theme-icon-container');
     if (container) {
         const isDark = document.body.classList.contains('dark-mode');
-        container.innerHTML = `<i data-lucide="${isDark ? 'sun' : 'moon'}"></i>`;
-        lucide.createIcons();
+        container.innerHTML = `<img src="assets/icons/${isDark ? 'sun' : 'moon'}.png" alt="theme" class="oil-icon" />`;
     }
     if (button) {
         const isDark = document.body.classList.contains('dark-mode');

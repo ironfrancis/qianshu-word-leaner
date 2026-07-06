@@ -6,17 +6,16 @@
     <title>千树背单词</title>
     <link rel="stylesheet" href="css/style.css?v=20260705d">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body onload="loadDefaultWordPack()">
     <div class="container">
         <header class="site-header">
             <div class="site-brand">
-                <i data-lucide="book-open"></i>
+                <img src="assets/icons/book-open.png" alt="logo" class="oil-icon" style="width: 1.5em; height: 1.5em;" />
                 <span>千树背单词</span>
             </div>
             <button id="theme-toggle" class="btn btn-icon btn-ghost" onclick="toggleTheme()" title="切换主题" aria-label="切换到深色模式">
-                <span id="theme-icon-container"><i data-lucide="moon"></i></span>
+                <span id="theme-icon-container"><img src="assets/icons/moon.png" alt="moon" class="oil-icon" /></span>
             </button>
         </header>
 
@@ -132,10 +131,10 @@
                 <button id="end-challenge-button" class="btn btn-warning hidden" onclick="endChallenge()">结束练习</button>
                 <button class="btn btn-warning" onclick="backToSource()">返回首页</button>
                 <button id="pronunciation-toggle" class="btn btn-icon" onclick="togglePronunciation()" title="发音开关" aria-label="关闭发音" aria-pressed="true">
-                    <span id="pronunciation-icon-container"><i data-lucide="audio-lines"></i></span>
+                    <span id="pronunciation-icon-container"><img src="assets/icons/audio-lines.png" alt="audio" class="oil-icon" /></span>
                 </button>
                 <button id="sound-toggle" class="btn btn-icon" onclick="toggleSound()" title="音效开关" aria-label="关闭音效" aria-pressed="true">
-                    <span id="sound-icon-container"><i data-lucide="volume-2"></i></span>
+                    <span id="sound-icon-container"><img src="assets/icons/volume-2.png" alt="sound" class="oil-icon" /></span>
                 </button>
             </div>
 
