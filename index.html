@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/style.css?v=20260705d">
     <link rel="stylesheet" href="css/enhancements.css?v=20260706a">
     <link rel="stylesheet" href="css/error-review.css?v=20260706b">
+    <link rel="stylesheet" href="css/mistake-practice.css?v=20260706c">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body onload="loadDefaultWordPack()">
@@ -140,7 +141,14 @@
                 </button>
             </div>
 
-            <!-- 答案显示 -->
+            <!-- 快捷键提示条（由 enhancements.js 动态控制） -->
+            <div id="shortcut-hint" class="shortcut-hint hidden" aria-hidden="true">
+                <kbd>Esc</kbd> 返回首页 <span class="hint-sep">|</span>
+                <kbd>Enter</kbd> 下一个 <span class="hint-sep">|</span>
+                <kbd>Tab</kbd> 切换按钮
+            </div>
+
+            <!-- 答案显示区 -->
             <div id="answer-display" class="answer-display hidden">
                 <div class="correct-answer">
                     <span class="answer-label">正确答案:</span>
@@ -209,5 +217,6 @@
     <script src="js/typing-game.js?v=20260705g"></script>
     <script src="js/enhancements.js?v=20260706a"></script>
     <script src="js/error-review.js?v=20260706b"></script>
+    <script src="js/mistake-practice.js?v=20260706c"></script>
 </body>
 </html>
