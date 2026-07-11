@@ -108,6 +108,9 @@
             <!-- 单词显示区 -->
             <div class="word-display">
                 <div class="chinese-word" id="chinese-word" aria-live="polite">加载中...</div>
+                <button id="replay-pronunciation-btn" class="btn btn-icon btn-ghost replay-pronunciation-btn hidden" onclick="replayPronunciation()" title="重新朗读 (Ctrl+Space)" aria-label="重新朗读">
+                    <img src="assets/icons/audio-lines.png" alt="audio" class="oil-icon" style="width: 24px; height: 24px;" />
+                </button>
             </div>
 
             <!-- 输入区域 -->
@@ -145,7 +148,7 @@
             <div id="shortcut-hint" class="shortcut-hint hidden" aria-hidden="true">
                 <kbd>Esc</kbd> 返回首页 <span class="hint-sep">|</span>
                 <kbd>Enter</kbd> 下一个 <span class="hint-sep">|</span>
-                <kbd>Tab</kbd> 切换按钮
+                <kbd>Ctrl</kbd>+<kbd>Space</kbd> 重读
             </div>
 
             <!-- 答案显示区 -->

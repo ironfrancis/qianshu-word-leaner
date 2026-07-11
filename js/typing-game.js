@@ -207,6 +207,16 @@ function loadNextWord() {
 
     // 播放单词发音
     pronunciationManager.play(currentWord);
+    
+    // 显示发音重播按钮
+    const replayBtn = document.getElementById('replay-pronunciation-btn');
+    if (replayBtn) {
+        if (pronunciationManager.isEnabled()) {
+            replayBtn.classList.remove('hidden');
+        } else {
+            replayBtn.classList.add('hidden');
+        }
+    }
 
     if (alwaysShowAnswer) {
         // 常显模式：直接展示该词学习卡，不需要新词预览或智能提示
@@ -1096,6 +1106,39 @@ function updateSoundIcon() {
 function togglePronunciation() {
     pronunciationManager.toggle();
     updatePronunciationIcon();
+    
+    // 同步更新重播按钮可见性
+    const replayBtn = document.getElementById('replay-pronunciation-btn');
+    if (replayBtn) {
+        if (pronunciationManager.isEnabled()) {
+            replayBtn.classList.remove('hidden');
+        } else {
+            replayBtn.classList.add('hidden');
+        }
+    }
+}
+
+/**
+ * 重新播放当前单词发音
+ */
+function replayPronunciation() {
+    if (typeof currentWord !== 'undefined' && currentWord) {
+        // 给按钮添加按压动画反馈
+        const btn = document.getElementById('replay-pronunciation-btn');
+        if (btn) {
+            btn.style.transform = 'translateY(0) scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 150);
+        }
+        pronunciationManager.play(currentWord);
+        
+        // 播放后自动焦点移回输入框
+        const input = document.getElementById('word-input');
+        if (input && !input.disabled) {
+            input.focus();
+        }
+    }
 }
 
 /**
