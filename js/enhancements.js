@@ -19,6 +19,15 @@
             return;
         }
 
+        // Ctrl+Space 或 Cmd+Space: 重新播放发音
+        if ((e.ctrlKey || e.metaKey) && e.code === 'Space' && practiceVisible) {
+            e.preventDefault();
+            if (typeof replayPronunciation === 'function') {
+                replayPronunciation();
+            }
+            return;
+        }
+
         // 输入框中不拦截其他键
         if (e.target && e.target.tagName === 'INPUT') return;
 
@@ -109,7 +118,7 @@
         hintBar.innerHTML =
             '<span class="kb-hint-item"><kbd>Esc</kbd> 返回首页</span>' +
             '<span class="kb-hint-item"><kbd>Enter</kbd> 下一个</span>' +
-            '<span class="kb-hint-item"><kbd>Tab</kbd> 切换按钮</span>';
+            '<span class="kb-hint-item"><kbd>Ctrl</kbd>+<kbd>Space</kbd> 重读</span>';
         practiceSection.appendChild(hintBar);
     }
 

@@ -131,24 +131,30 @@
     /**
      * 启动错题专练（首页按钮 → 全部错题）
      */
-    window.startMistakePractice = function () {
+    var startMistakePractice = function () {
         var mistakes = collectMistakeWords();
         if (mistakes.length === 0) return;
 
         pendingMistakeQueue = mistakes;
         startSession('challenge');
     };
+    if (typeof window !== 'undefined') {
+        window.startMistakePractice = startMistakePractice;
+    }
 
     /**
      * 专练本轮错题（完成页按钮 → 本轮错题）
      */
-    window.practiceSessionErrors = function () {
+    var practiceSessionErrors = function () {
         var errorWords = getSessionErrorWordsFromDOM();
         if (errorWords.length === 0) return;
 
         pendingMistakeQueue = deduplicateWords(errorWords);
         startSession('challenge');
     };
+    if (typeof window !== 'undefined') {
+        window.practiceSessionErrors = practiceSessionErrors;
+    }
 
     /* ==================== 首页动态 UI ==================== */
 
@@ -275,9 +281,11 @@
         setTimeout(updateHomeMistakeUI, 500);
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     }
 })();
